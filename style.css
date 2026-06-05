@@ -87,6 +87,8 @@ body {
 .shard-badge.black { background: #f2f2f7; color: var(--gray); }
 
 /* ── Calendar Nav ── */
+.calendar-grid-wrapper { position: relative; overflow: hidden; }
+
 .calendar-nav {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px; padding: 0 4px;

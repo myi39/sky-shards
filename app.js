@@ -188,30 +188,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sheet-backdrop').addEventListener('click', hideSheet);
 
   const calSection = document.querySelector('.calendar-section');
-  let swipeStartX   = 0;
-  let swipeStartY   = 0;
-  let swipeAxis     = null;
-  let peekGrid      = null;
-  let peekDelta     = 0;
-  let initialOffset = 0;
+  let swipeStartX  = 0;
+  let swipeStartY  = 0;
+  let swipeAxis    = null;
+  let peekGrid     = null;
+  let peekDelta    = 0;
+  let isAnimating  = false;
   const AXIS_THRESHOLD  = 8;
   const SWIPE_THRESHOLD = 50;
 
   calSection.addEventListener('touchstart', (e) => {
+    if (isAnimating) return;
     const mainGrid = document.getElementById('calendar-grid');
-    if (peekGrid) {
-      const matrix = new DOMMatrix(getComputedStyle(mainGrid).transform);
-      initialOffset = matrix.m41;
-      mainGrid.style.transition = 'none';
-      mainGrid.style.transform  = `translateX(${initialOffset}px)`;
-      peekGrid.style.transition = 'none';
-      peekGrid.remove();
-      peekGrid = null;
-    } else {
-      initialOffset = 0;
-      mainGrid.style.transition = 'none';
-      mainGrid.style.transform  = 'translateX(0)';
-    }
+    mainGrid.style.transition = 'none';
+    mainGrid.style.transform  = 'translateX(0)';
     swipeStartX = e.touches[0].clientX;
     swipeStartY = e.touches[0].clientY;
     peekDelta   = 0;
@@ -219,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
   calSection.addEventListener('touchmove', (e) => {
+    if (isAnimating) return;
     const dx = e.touches[0].clientX - swipeStartX;
     const dy = e.touches[0].clientY - swipeStartY;
 
@@ -232,11 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (swipeAxis === 'h') {
       e.preventDefault();
-      const totalX = initialOffset + dx;
-      document.getElementById('calendar-grid').style.transform = `translateX(${totalX}px)`;
+      document.getElementById('calendar-grid').style.transform = `translateX(${dx}px)`;
       if (peekGrid) {
         const base = peekDelta > 0 ? `100% + ${SWIPE_GAP}px` : `-100% - ${SWIPE_GAP}px`;
-        peekGrid.style.transform = `translateX(calc(${base} + ${totalX}px))`;
+        peekGrid.style.transform = `translateX(calc(${base} + ${dx}px))`;
       }
     }
   }, { passive: false });
@@ -244,10 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
   calSection.addEventListener('touchend', (e) => {
     if (swipeAxis === 'h') {
       const dx       = e.changedTouches[0].clientX - swipeStartX;
-      const totalX   = initialOffset + dx;
       const mainGrid = document.getElementById('calendar-grid');
 
-      if (Math.abs(totalX) >= SWIPE_THRESHOLD && totalX * peekDelta < 0 && peekGrid) {
+      if (Math.abs(dx) >= SWIPE_THRESHOLD && peekGrid) {
+        isAnimating = true;
         mainGrid.style.transition = 'transform 0.2s ease-out';
         mainGrid.style.transform  = `translateX(${peekDelta > 0 ? '-100%' : '100%'})`;
         peekGrid.style.transition = 'transform 0.2s ease-out';
@@ -263,8 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
           mainGrid.style.transform  = 'translateX(0)';
           p.remove();
           peekGrid = null;
+          isAnimating = false;
         });
       } else {
+        isAnimating = true;
         mainGrid.style.transition = 'transform 0.2s ease-out';
         mainGrid.style.transform  = 'translateX(0)';
         if (peekGrid) {
@@ -276,7 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
             p.removeEventListener('transitionend', handler);
             p.remove();
             peekGrid = null;
+            isAnimating = false;
           });
+        } else {
+          isAnimating = false;
         }
       }
     }
