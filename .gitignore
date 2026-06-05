@@ -1,10 +1,15 @@
+# ツール・個人環境
 .superpowers/
 .claude/
-.DS_Store
-*.swp
-*.swo
-*~
-.env
+
+# 依存関係（luxon は CDN 経由のため npm 不要）
 node_modules/
 package.json
 package-lock.json
+
+# 環境変数
+.env
+
+# 不要ディレクトリ
+docs/
+tests/
