@@ -104,3 +104,13 @@ function getShardInfo(date) {
     lastEnd:  occurrences[2].end,
   };
 }
+
+// from: luxon DateTime（Sky ゾーン推奨）
+// 再帰でシャードのある日を探す（深さは最大 2 日程度）
+function findNextShard(from) {
+  const info = getShardInfo(from);
+  if (info.hasShard && from < info.lastEnd) {
+    return info;
+  }
+  return findNextShard(info.date.plus({ days: 1 }));
+}

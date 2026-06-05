@@ -45,6 +45,14 @@
   const i3 = getShardInfo(d3);
   assert(i3.hasShard === false,                'July 4 (Sat): hasShard = false');
 
+  // Test 4: 2026-07-04（土, シャードなし） → findNextShard が翌日 7/5 を返す
+  const from4 = luxon.DateTime.fromObject({ year: 2026, month: 7, day: 4, hour: 12 }, { zone: 'America/Los_Angeles' });
+  const next4 = findNextShard(from4);
+  assert(next4.date.day === 5 && next4.date.month === 7, 'findNextShard from July 4 → July 5');
+  assert(next4.hasShard === true,                         'July 5: hasShard = true');
+  assert(next4.realm === 'vault',                         'July 5: realm = vault');
+  assert(next4.location === 'Jellyfish Cove',             'July 5: location = Jellyfish Cove');
+
   const div = document.getElementById('results');
   div.innerHTML = results.map(r =>
     `<div class="${r.ok ? 'pass' : 'fail'}">${r.ok ? '✓' : '✗'} ${r.label}</div>`
