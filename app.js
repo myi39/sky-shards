@@ -79,6 +79,30 @@ document.getElementById('next-month').addEventListener('click', () => {
   renderCalendar(currentYear, currentMonth);
 });
 
+function renderNextShard() {
+  const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
+  const info    = findNextShard(nowSky);
+  const nextOcc = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
+
+  const todaySky    = nowSky.startOf('day');
+  const tomorrowSky = todaySky.plus({ days: 1 });
+  const isToday     = info.date.toISODate() === todaySky.toISODate();
+  const isTomorrow  = info.date.toISODate() === tomorrowSky.toISODate();
+  const dateLabel   = isToday ? '今日' : isTomorrow ? '明日' : info.date.setLocale('ja').toFormat('M月d日');
+
+  const remaining = info.occurrences.filter(occ => nowSky < occ.end).length;
+
+  document.getElementById('next-shard-card').innerHTML = `
+    <div class="next-shard-label">次のシャード</div>
+    <div class="next-shard-time">${nextOcc.startLocal.toFormat('HH:mm')}</div>
+    <div class="next-shard-meta">
+      <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
+      <span class="next-shard-location">${info.realmJa} &nbsp;·&nbsp; ${info.location}</span>
+    </div>
+    <div class="next-shard-count">${dateLabel} &nbsp;·&nbsp; あと${remaining}回</div>
+  `;
+}
+
 function showDetail(skyDate, info) {
   const dateStr = skyDate.setLocale('ja').toFormat('M月d日（EEE）');
   let html = `
@@ -120,5 +144,7 @@ function hideSheet() {
 document.addEventListener('DOMContentLoaded', () => {
   updateHeaderDate();
   renderCalendar(currentYear, currentMonth);
+  renderNextShard();
+  setInterval(renderNextShard, 60_000); // 1分ごとに更新
   document.getElementById('sheet-backdrop').addEventListener('click', hideSheet);
 });
