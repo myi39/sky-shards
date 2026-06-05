@@ -13,14 +13,14 @@ function timeRangeHTML(landLocal, endLocal) {
 
   if (crossMidnight) {
     return `<div class="time-range cross-midnight">
-      <div class="time-col">
-        <div class="time-date">${fmtDate(landLocal)}</div>
-        <div class="time-value">${fmtTime(landLocal)}</div>
+      <div class="time-dates">
+        <span class="time-date">${fmtDate(landLocal)}</span>
+        <span class="time-date">${fmtDate(endLocal)}</span>
       </div>
-      <div class="time-sep">-</div>
-      <div class="time-col">
-        <div class="time-date">${fmtDate(endLocal)}</div>
-        <div class="time-value">${fmtTime(endLocal)}</div>
+      <div class="time-values">
+        <span class="time-value">${fmtTime(landLocal)}</span>
+        <span class="time-sep">-</span>
+        <span class="time-value">${fmtTime(endLocal)}</span>
       </div>
     </div>`;
   } else {

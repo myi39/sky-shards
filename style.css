@@ -55,9 +55,17 @@ body {
 
 /* ── Time Range ── */
 .time-range { margin-bottom: 8px; }
-.time-range.cross-midnight { display: flex; align-items: flex-end; gap: 6px; }
-.time-col { display: flex; flex-direction: column; }
-.time-date { font-size: 11px; color: var(--text-tertiary); margin-bottom: 1px; }
+.time-date { font-size: 11px; color: var(--text-tertiary); }
+.time-range:not(.cross-midnight) .time-date { margin-bottom: 1px; }
+
+/* cross-midnight: 日付行 + 時刻行の2段構成 */
+.time-range.cross-midnight .time-dates {
+  display: flex; justify-content: space-between;
+  margin-bottom: 2px;
+}
+.time-range.cross-midnight .time-values {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
 
 .next-shard-card .time-value {
   font-size: 36px; font-weight: 700;
@@ -66,7 +74,6 @@ body {
 .next-shard-card .time-sep {
   font-size: 28px; font-weight: 300;
   color: var(--text-secondary); line-height: 1;
-  padding-bottom: 2px;
 }
 .occurrence-card .time-value {
   font-size: 22px; font-weight: 700;
