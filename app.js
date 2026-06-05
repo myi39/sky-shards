@@ -73,6 +73,14 @@ function renderCalendarGrid(year, month, gridEl) {
     cell.addEventListener('click', () => showDetail(skyDate, info));
     gridEl.appendChild(cell);
   }
+
+  const totalCells  = firstDayOfWeek + daysInMonth;
+  const paddingCells = (6 - Math.ceil(totalCells / 7)) * 7;
+  for (let i = 0; i < paddingCells; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell empty';
+    gridEl.appendChild(cell);
+  }
 }
 
 function renderCalendar(year, month) {

@@ -22,20 +22,13 @@ body {
   min-height: 100dvh;
 }
 
-/* ── Header ── */
-.header {
-  padding: 10px 16px 8px;
-  position: sticky; top: 0;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--separator);
-  z-index: 10;
-}
-.header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-
 /* ── Main ── */
 .main { padding: 16px 16px 100px; }
+.page-label {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-tertiary); letter-spacing: 0.3px;
+  margin-bottom: 12px;
+}
 
 /* ── Next Shard Card ── */
 .next-shard-section { margin-bottom: 24px; }
