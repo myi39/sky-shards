@@ -6,10 +6,29 @@ const _initSky   = luxon.DateTime.now().setZone('America/Los_Angeles');
 let currentYear  = _initSky.year;
 let currentMonth = _initSky.month;
 
-function updateHeaderDate() {
-  const nowSky = luxon.DateTime.now().setZone('America/Los_Angeles');
-  const fmt = new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-  document.getElementById('current-date').textContent = fmt.format(nowSky.toJSDate());
+function timeRangeHTML(landLocal, endLocal) {
+  const crossMidnight = landLocal.toISODate() !== endLocal.toISODate();
+  const fmtDate = dt => dt.setLocale('ja').toFormat('yyyy/MM/dd(EEE)');
+  const fmtTime = dt => dt.toFormat('HH:mm');
+
+  if (crossMidnight) {
+    return `<div class="time-range cross-midnight">
+      <div class="time-col">
+        <div class="time-date">${fmtDate(landLocal)}</div>
+        <div class="time-value">${fmtTime(landLocal)}</div>
+      </div>
+      <div class="time-sep">-</div>
+      <div class="time-col">
+        <div class="time-date">${fmtDate(endLocal)}</div>
+        <div class="time-value">${fmtTime(endLocal)}</div>
+      </div>
+    </div>`;
+  } else {
+    return `<div class="time-range">
+      <div class="time-date">${fmtDate(landLocal)}</div>
+      <div class="time-value">${fmtTime(landLocal)} - ${fmtTime(endLocal)}</div>
+    </div>`;
+  }
 }
 
 function renderCalendar(year, month) {
@@ -72,26 +91,19 @@ function renderCalendar(year, month) {
 }
 
 function renderNextShard() {
-  const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
-  const info    = findNextShard(nowSky);
-  const nextOcc = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
-
-  const todaySky    = nowSky.startOf('day');
-  const tomorrowSky = todaySky.plus({ days: 1 });
-  const isToday     = info.date.toISODate() === todaySky.toISODate();
-  const isTomorrow  = info.date.toISODate() === tomorrowSky.toISODate();
-  const dateLabel   = isToday ? '今日' : isTomorrow ? '明日' : info.date.setLocale('ja').toFormat('M月d日');
-
+  const nowSky    = luxon.DateTime.now().setZone('America/Los_Angeles');
+  const info      = findNextShard(nowSky);
+  const nextOcc   = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
   const remaining = info.occurrences.filter(occ => nowSky < occ.end).length;
 
   document.getElementById('next-shard-card').innerHTML = `
     <div class="next-shard-label">次のシャード</div>
-    <div class="next-shard-time">${nextOcc.startLocal.toFormat('HH:mm')}</div>
+    ${timeRangeHTML(nextOcc.landLocal, nextOcc.endLocal)}
     <div class="next-shard-meta">
       <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
       <span class="next-shard-location">${info.realmJa} &nbsp;·&nbsp; ${info.location}</span>
     </div>
-    <div class="next-shard-count">${dateLabel} &nbsp;·&nbsp; あと${remaining}回</div>
+    <div class="next-shard-count">あと${remaining}回</div>
   `;
 }
 
@@ -100,9 +112,11 @@ function showDetail(skyDate, info) {
   let html = `
     <div class="sheet-date-header">
       <div class="sheet-date-title">${dateStr}</div>
-      ${info.hasShard
-        ? `<span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>`
-        : ''}
+      ${info.hasShard ? `
+        <div class="sheet-header-right">
+          <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
+          <span class="sheet-location">${info.realmJa} · ${info.location}</span>
+        </div>` : ''}
     </div>
   `;
 
@@ -112,12 +126,7 @@ function showDetail(skyDate, info) {
     info.occurrences.forEach(occ => {
       html += `
         <div class="occurrence-card">
-          <div class="occ-time">${occ.startLocal.toFormat('HH:mm')}</div>
-          <div class="occ-land">着地 ${occ.landLocal.toFormat('HH:mm')} &nbsp;·&nbsp; 消滅 ${occ.endLocal.toFormat('HH:mm')}</div>
-          <div class="occ-meta">
-            <span class="shard-badge ${info.isRed ? 'red' : 'black'}" style="font-size:11px;padding:2px 7px">${info.realmJa}</span>
-            <span>${info.location}</span>
-          </div>
+          ${timeRangeHTML(occ.landLocal, occ.endLocal)}
         </div>
       `;
     });
@@ -134,7 +143,6 @@ function hideSheet() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  updateHeaderDate();
   renderCalendar(currentYear, currentMonth);
   renderNextShard();
   setInterval(renderNextShard, 60_000); // 1分ごとに更新
