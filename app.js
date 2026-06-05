@@ -6,6 +6,18 @@ const _initSky   = luxon.DateTime.now().setZone('America/Los_Angeles');
 let currentYear  = _initSky.year;
 let currentMonth = _initSky.month;
 
+function rewardHTML(info) {
+  if (info.isRed) return `<span class="reward-text">${info.rewardAC}本</span>`;
+  return `<span class="reward-text">大キャン4つ分</span>`;
+}
+
+function badgeAndRewardHTML(info) {
+  return `<div class="badge-reward">
+    <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
+    ${rewardHTML(info)}
+  </div>`;
+}
+
 function timeRangeHTML(landLocal, endLocal) {
   const crossMidnight = landLocal.toISODate() !== endLocal.toISODate();
   const fmtDate = dt => dt.setLocale('ja').toFormat('MM/dd(EEE)');
@@ -98,10 +110,12 @@ function renderNextShard() {
   const label    = isActive ? '現在シャード中' : '次のシャード';
 
   document.getElementById('next-shard-card').innerHTML = `
-    <div class="next-shard-label">${label}</div>
+    <div class="next-shard-label-row">
+      <div class="next-shard-label">${label}</div>
+      ${badgeAndRewardHTML(info)}
+    </div>
     ${timeRangeHTML(nextOcc.landLocal, nextOcc.endLocal)}
     <div class="next-shard-meta">
-      <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
       <span class="next-shard-location">${info.realmJa} &nbsp;·&nbsp; ${info.location}</span>
     </div>
   `;
@@ -112,7 +126,7 @@ function showDetail(skyDate, info) {
   let html = `
     <div class="sheet-date-header">
       <div class="sheet-date-title">${dateStr}</div>
-      ${info.hasShard ? `<span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>` : ''}
+      ${info.hasShard ? badgeAndRewardHTML(info) : ''}
     </div>
     ${info.hasShard ? `<div class="sheet-location">${info.realmJa} · ${info.location}</div>` : ''}
   `;

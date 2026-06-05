@@ -63,6 +63,25 @@ const MAP_NAMES = {
 const REALMS   = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
 const REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨てられた地', vault: '書庫' };
 
+// 黒シャード：光のかけら 200粒（大キャンドル4つ分 = 大キャン×4）
+const BLACK_SHARD_REWARD_FRAGMENTS = 200;
+
+// 赤シャードのみ。マップごとに決まる1日の星キャン上限数（星キャン）。
+const REWARD_AC = {
+  'prairie.cave':        2,
+  'prairie.bird':        2.5,
+  'prairie.island':      3.5,
+  'forest.end':          2.5,
+  'forest.tree':         3.5,
+  'forest.sunny':        3.5,
+  'valley.dreams':       2.5,
+  'valley.hermit':       3.5,
+  'wasteland.graveyard': 2,
+  'wasteland.crab':      2.5,
+  'wasteland.ark':       3.5,
+  'vault.jelly':         3.5,
+};
+
 // date: luxon DateTime（任意のゾーン可）
 function getShardInfo(date) {
   const today   = date.setZone('America/Los_Angeles').startOf('day');
@@ -102,6 +121,8 @@ function getShardInfo(date) {
     location: MAP_NAMES[mapKey],
     occurrences,
     lastEnd:  occurrences[2].end,
+    rewardAC:        isRed ? REWARD_AC[mapKey] : null,
+    rewardFragments: isRed ? null : BLACK_SHARD_REWARD_FRAGMENTS,
   };
 }
 
