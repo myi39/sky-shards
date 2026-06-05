@@ -159,7 +159,13 @@ function createPeekGrid(delta) {
 
 function slideMonth(delta) {
   const mainGrid = document.getElementById('calendar-grid');
+  const wrapper  = document.querySelector('.calendar-grid-wrapper');
   const peek = createPeekGrid(delta);
+
+  const peekHeight = peek.scrollHeight;
+  if (peekHeight > wrapper.offsetHeight) {
+    wrapper.style.minHeight = peekHeight + 'px';
+  }
 
   peek.getBoundingClientRect();
 
@@ -174,6 +180,7 @@ function slideMonth(delta) {
     changeMonth(delta);
     mainGrid.style.transition = 'none';
     mainGrid.style.transform  = 'translateX(0)';
+    wrapper.style.minHeight   = '';
     peek.remove();
   });
 }
@@ -238,6 +245,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (Math.abs(dx) >= SWIPE_THRESHOLD && peekGrid) {
         isAnimating = true;
+
+        const wrapper    = document.querySelector('.calendar-grid-wrapper');
+        const peekHeight = peekGrid.scrollHeight;
+        if (peekHeight > wrapper.offsetHeight) {
+          wrapper.style.minHeight = peekHeight + 'px';
+        }
+        wrapper.getBoundingClientRect();
+
         mainGrid.style.transition = 'transform 0.2s ease-out';
         mainGrid.style.transform  = `translateX(${peekDelta > 0 ? '-100%' : '100%'})`;
         peekGrid.style.transition = 'transform 0.2s ease-out';
@@ -251,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
           changeMonth(peekDelta);
           mainGrid.style.transition = 'none';
           mainGrid.style.transform  = 'translateX(0)';
+          wrapper.style.minHeight   = '';
           p.remove();
           peekGrid = null;
           isAnimating = false;
