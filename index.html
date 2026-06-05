@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sky シャード予報</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <h1>シャード予報</h1>
+    <p class="header-subtitle" id="current-date"></p>
+  </header>
+
+  <main class="main">
+    <section class="next-shard-section">
+      <div class="next-shard-card" id="next-shard-card"></div>
+    </section>
+
+    <section class="calendar-section">
+      <div class="calendar-nav">
+        <button class="nav-btn" id="prev-month">&#x2039;</button>
+        <h2 class="calendar-title" id="calendar-title"></h2>
+        <button class="nav-btn" id="next-month">&#x203a;</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </section>
+  </main>
+
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-content" id="sheet-content"></div>
+  </div>
+
+  <script src="shard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
