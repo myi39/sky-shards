@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     swipeStartX = e.touches[0].clientX;
     swipeStartY = e.touches[0].clientY;
+    peekDelta   = 0;
     swipeAxis   = null;
   }, { passive: true });
 
