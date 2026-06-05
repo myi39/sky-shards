@@ -63,17 +63,16 @@ body {
   letter-spacing: -1.5px; line-height: 1;
 }
 .next-shard-card .time-sep {
-  font-size: 28px; font-weight: 300;
-  color: var(--text-secondary); line-height: 1;
-  padding-bottom: 2px;
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -1.5px; line-height: 1;
 }
 .occurrence-card .time-value {
   font-size: 22px; font-weight: 700;
   letter-spacing: -0.5px; line-height: 1;
 }
 .occurrence-card .time-sep {
-  font-size: 18px; font-weight: 300;
-  color: var(--text-secondary); line-height: 1;
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -0.5px; line-height: 1;
 }
 
 /* ── Badges ── */
