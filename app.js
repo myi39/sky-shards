@@ -106,7 +106,7 @@ function renderNextShard() {
   const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
   const info    = findNextShard(nowSky);
   const nextOcc = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
-  const isActive = nowSky >= nextOcc.start;
+  const isActive = nowSky >= nextOcc.land;
   const label    = isActive ? '現在シャード中' : '次のシャード';
 
   document.getElementById('next-shard-card').innerHTML = `
