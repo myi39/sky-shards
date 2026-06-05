@@ -8,7 +8,7 @@ let currentMonth = _initSky.month;
 
 function timeRangeHTML(landLocal, endLocal) {
   const crossMidnight = landLocal.toISODate() !== endLocal.toISODate();
-  const fmtDate = dt => dt.setLocale('ja').toFormat('yyyy/MM/dd(EEE)');
+  const fmtDate = dt => dt.setLocale('ja').toFormat('MM/dd(EEE)');
   const fmtTime = dt => dt.toFormat('HH:mm');
 
   if (crossMidnight) {
@@ -91,19 +91,19 @@ function renderCalendar(year, month) {
 }
 
 function renderNextShard() {
-  const nowSky    = luxon.DateTime.now().setZone('America/Los_Angeles');
-  const info      = findNextShard(nowSky);
-  const nextOcc   = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
-  const remaining = info.occurrences.filter(occ => nowSky < occ.end).length;
+  const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
+  const info    = findNextShard(nowSky);
+  const nextOcc = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
+  const isActive = nowSky >= nextOcc.start;
+  const label   = isActive ? '現在シャード中' : '次のシャード';
 
   document.getElementById('next-shard-card').innerHTML = `
-    <div class="next-shard-label">次のシャード</div>
+    <div class="next-shard-label">${label}</div>
     ${timeRangeHTML(nextOcc.landLocal, nextOcc.endLocal)}
     <div class="next-shard-meta">
       <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
       <span class="next-shard-location">${info.realmJa} &nbsp;·&nbsp; ${info.location}</span>
     </div>
-    <div class="next-shard-count">あと${remaining}回</div>
   `;
 }
 

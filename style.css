@@ -52,7 +52,6 @@ body {
 }
 .next-shard-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .next-shard-location { font-size: 13px; color: var(--text-secondary); }
-.next-shard-count { font-size: 12px; color: var(--text-tertiary); }
 
 /* ── Time Range ── */
 .time-range { margin-bottom: 8px; }
