@@ -2,8 +2,9 @@
 
 const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
 
-let currentYear  = luxon.DateTime.now().setZone('America/Los_Angeles').year;
-let currentMonth = luxon.DateTime.now().setZone('America/Los_Angeles').month;
+const _initSky   = luxon.DateTime.now().setZone('America/Los_Angeles');
+let currentYear  = _initSky.year;
+let currentMonth = _initSky.month;
 
 function updateHeaderDate() {
   const nowSky = luxon.DateTime.now().setZone('America/Los_Angeles');
@@ -69,15 +70,6 @@ function renderCalendar(year, month) {
     grid.appendChild(cell);
   }
 }
-
-document.getElementById('prev-month').addEventListener('click', () => {
-  if (--currentMonth === 0) { currentMonth = 12; currentYear--; }
-  renderCalendar(currentYear, currentMonth);
-});
-document.getElementById('next-month').addEventListener('click', () => {
-  if (++currentMonth === 13) { currentMonth = 1; currentYear++; }
-  renderCalendar(currentYear, currentMonth);
-});
 
 function renderNextShard() {
   const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
@@ -146,5 +138,13 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCalendar(currentYear, currentMonth);
   renderNextShard();
   setInterval(renderNextShard, 60_000); // 1分ごとに更新
+  document.getElementById('prev-month').addEventListener('click', () => {
+    if (--currentMonth === 0) { currentMonth = 12; currentYear--; }
+    renderCalendar(currentYear, currentMonth);
+  });
+  document.getElementById('next-month').addEventListener('click', () => {
+    if (++currentMonth === 13) { currentMonth = 1; currentYear++; }
+    renderCalendar(currentYear, currentMonth);
+  });
   document.getElementById('sheet-backdrop').addEventListener('click', hideSheet);
 });
