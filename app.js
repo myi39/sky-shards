@@ -79,7 +79,46 @@ document.getElementById('next-month').addEventListener('click', () => {
   renderCalendar(currentYear, currentMonth);
 });
 
+function showDetail(skyDate, info) {
+  const dateStr = skyDate.setLocale('ja').toFormat('M月d日（EEE）');
+  let html = `
+    <div class="sheet-date-header">
+      <div class="sheet-date-title">${dateStr}</div>
+      ${info.hasShard
+        ? `<span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>`
+        : ''}
+    </div>
+  `;
+
+  if (!info.hasShard) {
+    html += `<div class="no-shard-message">この日はシャードなし</div>`;
+  } else {
+    info.occurrences.forEach(occ => {
+      html += `
+        <div class="occurrence-card">
+          <div class="occ-time">${occ.startLocal.toFormat('HH:mm')}</div>
+          <div class="occ-land">着地 ${occ.landLocal.toFormat('HH:mm')} &nbsp;·&nbsp; 消滅 ${occ.endLocal.toFormat('HH:mm')}</div>
+          <div class="occ-meta">
+            <span class="shard-badge ${info.isRed ? 'red' : 'black'}" style="font-size:11px;padding:2px 7px">${info.realmJa}</span>
+            <span>${info.location}</span>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  document.getElementById('sheet-content').innerHTML = html;
+  document.getElementById('bottom-sheet').classList.add('open');
+  document.getElementById('sheet-backdrop').classList.add('visible');
+}
+
+function hideSheet() {
+  document.getElementById('bottom-sheet').classList.remove('open');
+  document.getElementById('sheet-backdrop').classList.remove('visible');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   updateHeaderDate();
   renderCalendar(currentYear, currentMonth);
+  document.getElementById('sheet-backdrop').addEventListener('click', hideSheet);
 });
