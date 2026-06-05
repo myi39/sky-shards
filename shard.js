@@ -38,30 +38,30 @@ const SHARD_CONFIGS = [
 ];
 
 const MAP_NAMES = {
-  'prairie.butterfly': 'Butterfly Field',
-  'prairie.village':   'Village Islands',
-  'prairie.cave':      'Cave',
-  'prairie.bird':      'Bird Nest',
-  'prairie.island':    'Sanctuary Island',
-  'forest.brook':      'Forest Brook',
-  'forest.boneyard':   'Boneyard',
-  'forest.end':        'Forest Garden',
-  'forest.tree':       'Treehouse',
-  'forest.sunny':      'Elevated Clearing',
-  'valley.rink':       'Ice Rink',
-  'valley.dreams':     'Village of Dreams',
-  'valley.hermit':     'Hermit Valley',
-  'wasteland.temple':  'Broken Temple',
-  'wasteland.battlefield': 'Battlefield',
-  'wasteland.graveyard':   'Graveyard',
-  'wasteland.crab':    'Crabfield',
-  'wasteland.ark':     'Forgotten Ark',
-  'vault.starlight':   'Starlight Desert',
-  'vault.jelly':       'Jellyfish Cove',
+  'prairie.butterfly': '蝶々の住処',
+  'prairie.village':   '村',
+  'prairie.cave':      '洞窟',
+  'prairie.bird':      '鳥の巣',
+  'prairie.island':    '楽園の島々',
+  'forest.brook':      '小川',
+  'forest.boneyard':   '墓場',
+  'forest.end':        '雨林の端',
+  'forest.tree':       'ツリーハウス',
+  'forest.sunny':      '高台広場',
+  'valley.rink':       'アイスリンク',
+  'valley.dreams':     '夢見の町',
+  'valley.hermit':     '隠者の峠',
+  'wasteland.temple':  '倒壊した祠',
+  'wasteland.battlefield': '戦場',
+  'wasteland.graveyard':   '墓所',
+  'wasteland.crab':    '蟹の沼地（座礁船）',
+  'wasteland.ark':     '忘れられた方舟',
+  'vault.starlight':   '星月夜の砂漠',
+  'vault.jelly':       '海月の入り江',
 };
 
 const REALMS   = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
-const REALM_JA = { prairie: '草原', forest: '森', valley: '谷', wasteland: '荒れ地', vault: '金庫' };
+const REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨てられた地', vault: '書庫' };
 
 // date: luxon DateTime（任意のゾーン可）
 function getShardInfo(date) {
