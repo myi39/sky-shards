@@ -106,12 +106,9 @@ function showDetail(skyDate, info) {
   let html = `
     <div class="sheet-date-header">
       <div class="sheet-date-title">${dateStr}</div>
-      ${info.hasShard ? `
-        <div class="sheet-header-right">
-          <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
-          <span class="sheet-location">${info.realmJa} · ${info.location}</span>
-        </div>` : ''}
+      ${info.hasShard ? `<span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>` : ''}
     </div>
+    ${info.hasShard ? `<div class="sheet-location">${info.realmJa} · ${info.location}</div>` : ''}
   `;
 
   if (!info.hasShard) {
