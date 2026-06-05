@@ -61,6 +61,7 @@ body {
 .next-shard-card .time-value {
   font-size: 36px; font-weight: 700;
   letter-spacing: -1.5px; line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 .next-shard-card .time-sep {
   font-size: 36px; font-weight: 700;
@@ -69,6 +70,7 @@ body {
 .occurrence-card .time-value {
   font-size: 22px; font-weight: 700;
   letter-spacing: -0.5px; line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 .occurrence-card .time-sep {
   font-size: 22px; font-weight: 700;
