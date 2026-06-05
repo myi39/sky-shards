@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カードプロトタイプ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── 2カラムカード ── */
+    .two-day-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 12px;
+    }
+
+    .col-divider {
+      background: var(--separator);
+      border-radius: 1px;
+    }
+
+    .day-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .col-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+      margin-bottom: 2px;
+    }
+
+    .col-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ── Occurrence Block ── */
+    .occ-block {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    .occ-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      border-radius: 8px;
+    }
+
+    .occ-time {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+    }
+
+    /* ── 状態: 済み ── */
+    .occ-block.past .occ-fill {
+      width: 100%;
+      background: #e5e5ea;
+    }
+    .occ-block.past .occ-time {
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* ── 状態: 開催中 ── */
+    .occ-block.active .occ-fill {
+      background: #e8b84b;
+    }
+    .occ-block.active .occ-time {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    /* ── 状態: これから ── */
+    .occ-block.future {
+      background: var(--bg);
+    }
+    .occ-block.future .occ-time {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <main class="main">
+    <p class="page-label">カードプロトタイプ</p>
+    <section class="next-shard-section">
+      <div class="two-day-card" id="two-day-card"></div>
+    </section>
+  </main>
+  <script>
+    // モックデータ（固定）
+    const MOCK = {
+      today: {
+        label: '今日 · 6/6(金)',
+        sub: 'プレーリー · 赤 ★3',
+        slots: [
+          { time: '14:15 - 15:10', state: 'past',   progress: 100 },
+          { time: '19:15 - 20:10', state: 'active',  progress: 40  },
+          { time: '23:15 - 00:10', state: 'future',  progress: 0   },
+        ],
+      },
+      tomorrow: {
+        label: '明日 · 6/7(土)',
+        sub: '森 · 黒',
+        slots: [
+          { time: '14:15 - 15:10', state: 'future', progress: 0 },
+          { time: '19:15 - 20:10', state: 'future', progress: 0 },
+          { time: '23:15 - 00:10', state: 'future', progress: 0 },
+        ],
+      },
+    };
+
+    function buildColumn(data) {
+      const col = document.createElement('div');
+      col.className = 'day-column';
+      col.innerHTML = `
+        <div class="col-header">${data.label}</div>
+        <div class="col-sub">${data.sub}</div>
+      `;
+      data.slots.forEach(slot => {
+        const block = document.createElement('div');
+        block.className = `occ-block ${slot.state}`;
+        block.innerHTML = `
+          <div class="occ-fill" style="width:${slot.progress}%"></div>
+          <span class="occ-time">${slot.time}</span>
+        `;
+        col.appendChild(block);
+      });
+      return col;
+    }
+
+    const card = document.getElementById('two-day-card');
+    card.appendChild(buildColumn(MOCK.today));
+    const div = document.createElement('div');
+    div.className = 'col-divider';
+    card.appendChild(div);
+    card.appendChild(buildColumn(MOCK.tomorrow));
+  </script>
+</body>
+</html>
