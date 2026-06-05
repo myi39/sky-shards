@@ -10,25 +10,19 @@ function timeRangeHTML(landLocal, endLocal) {
   const crossMidnight = landLocal.toISODate() !== endLocal.toISODate();
   const fmtDate = dt => dt.setLocale('ja').toFormat('MM/dd(EEE)');
   const fmtTime = dt => dt.toFormat('HH:mm');
+  const rightDateVis = crossMidnight ? 'visible' : 'hidden';
 
-  if (crossMidnight) {
-    return `<div class="time-range cross-midnight">
-      <div class="time-dates">
-        <span class="time-date">${fmtDate(landLocal)}</span>
-        <span class="time-date">${fmtDate(endLocal)}</span>
-      </div>
-      <div class="time-values">
-        <span class="time-value">${fmtTime(landLocal)}</span>
-        <span class="time-sep">-</span>
-        <span class="time-value">${fmtTime(endLocal)}</span>
-      </div>
-    </div>`;
-  } else {
-    return `<div class="time-range">
+  return `<div class="time-range">
+    <div class="time-col">
       <div class="time-date">${fmtDate(landLocal)}</div>
-      <div class="time-value">${fmtTime(landLocal)} - ${fmtTime(endLocal)}</div>
-    </div>`;
-  }
+      <div class="time-value">${fmtTime(landLocal)}</div>
+    </div>
+    <div class="time-sep">-</div>
+    <div class="time-col">
+      <div class="time-date" style="visibility:${rightDateVis}">${fmtDate(endLocal)}</div>
+      <div class="time-value">${fmtTime(endLocal)}</div>
+    </div>
+  </div>`;
 }
 
 function renderCalendar(year, month) {
