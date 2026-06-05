@@ -1,0 +1,179 @@
+:root {
+  --bg:           #ffffff;
+  --bg-secondary: #f5f5f7;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --separator:    #e5e5ea;
+  --red:          #ff3b30;
+  --gray:         #636366;
+  --blue:         #0071e3;
+  --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  padding: 20px 20px 12px;
+  position: sticky; top: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--separator);
+  z-index: 10;
+}
+.header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.header-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── Main ── */
+.main { padding: 16px 16px 100px; }
+
+/* ── Next Shard Card ── */
+.next-shard-section { margin-bottom: 24px; }
+
+.next-shard-card {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 16px;
+}
+.next-shard-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-secondary); margin-bottom: 8px;
+}
+.next-shard-time {
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -1.5px; line-height: 1;
+  margin-bottom: 8px;
+}
+.next-shard-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.next-shard-location { font-size: 13px; color: var(--text-secondary); }
+.next-shard-count { font-size: 12px; color: var(--text-tertiary); }
+
+/* ── Badges ── */
+.shard-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; font-weight: 600;
+  padding: 3px 8px; border-radius: 20px;
+}
+.shard-badge.red   { background: #fff2f1; color: var(--red); }
+.shard-badge.black { background: #f2f2f7; color: var(--gray); }
+
+/* ── Calendar Nav ── */
+.calendar-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; padding: 0 4px;
+}
+.calendar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+.nav-btn {
+  width: 32px; height: 32px; border: none;
+  background: var(--bg-secondary); border-radius: 50%;
+  font-size: 20px; color: var(--blue); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.nav-btn:hover   { background: #e5e5ea; }
+.nav-btn:active  { background: #d1d1d6; }
+
+/* ── Calendar Grid ── */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.weekday-header {
+  text-align: center; font-size: 11px; font-weight: 600;
+  color: var(--text-secondary); padding: 4px 0 8px;
+}
+.weekday-header.sun { color: #ff3b30; }
+.weekday-header.sat { color: var(--blue); }
+
+.day-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+.day-cell:hover:not(.empty) { background: var(--bg-secondary); }
+.day-cell:active:not(.empty) { background: #e5e5ea; }
+.day-cell.empty { cursor: default; pointer-events: none; }
+
+.day-number {
+  font-size: 13px; font-weight: 500; line-height: 1;
+  color: var(--text-primary);
+}
+.day-cell.today .day-number {
+  width: 26px; height: 26px;
+  background: #1d1d1f; color: #ffffff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px;
+}
+.day-cell.no-shard .day-number { color: var(--text-tertiary); }
+
+.shard-indicator { width: 5px; height: 5px; border-radius: 50%; }
+.shard-indicator.red   { background: var(--red); }
+.shard-indicator.black { background: var(--gray); }
+
+/* ── Bottom Sheet ── */
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 40; pointer-events: none;
+  transition: background 0.3s;
+}
+.sheet-backdrop.visible {
+  background: rgba(0,0,0,0.35);
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: fixed; bottom: 0;
+  left: 50%; transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 480px;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  z-index: 50;
+  padding: 8px 16px 48px;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 80vh; overflow-y: auto;
+}
+.bottom-sheet.open { transform: translateX(-50%) translateY(0); }
+
+.sheet-grip {
+  width: 36px; height: 4px;
+  background: var(--separator); border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.sheet-date-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 14px;
+}
+.sheet-date-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+
+.occurrence-card {
+  background: var(--bg-secondary);
+  border-radius: 12px; padding: 12px; margin-bottom: 8px;
+}
+.occ-time  { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.occ-land  { font-size: 12px; color: var(--text-secondary); margin: 2px 0 8px; }
+.occ-meta  { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text-secondary); }
+
+.no-shard-message {
+  text-align: center; color: var(--text-tertiary);
+  padding: 32px 0; font-size: 15px;
+}
