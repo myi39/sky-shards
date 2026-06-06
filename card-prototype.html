@@ -129,103 +129,139 @@
 <body>
   <main class="main">
     <p class="page-label">カードプロトタイプ</p>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:var(--text-secondary);">
+      <label>時刻: <input type="time" id="mock-time" value="19:45" style="font-size:12px;"></label>
+      <label>ポジション:
+        <select id="mock-pos" style="font-size:12px;">
+          <option value="0">0 – slot1前</option>
+          <option value="1">1 – slot1中</option>
+          <option value="2">2 – slot1-2間</option>
+          <option value="3" selected>3 – slot2中</option>
+          <option value="4">4 – slot2-3間</option>
+          <option value="5">5 – slot3中</option>
+          <option value="6">6 – slot3後</option>
+        </select>
+      </label>
+    </div>
+
     <section class="next-shard-section">
       <div class="two-day-card" id="two-day-card"></div>
     </section>
   </main>
   <script>
-    // 0=slot0前, 1=slot0中, 2=slot0-1間, 3=slot1中, 4=slot1-2間, 5=slot2中, 6=slot2後
-    const MOCK_POSITION = 3;
+    function timeToMin(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return h * 60 + m;
+    }
 
-    function placeIndicator(col, slots, currentPos) {
+    // 3回分のシャード時間定義（slot2は日跨ぎ）
+    const SLOT_DEFS = [
+      { startMin: timeToMin('14:15'), endMin: timeToMin('15:10'), label: '14:15 - 15:10' },
+      { startMin: timeToMin('19:15'), endMin: timeToMin('20:10'), label: '19:15 - 20:10' },
+      { startMin: timeToMin('23:15'), endMin: timeToMin('00:10') + 1440, label: '23:15 - 00:10' },
+    ];
+
+    const MOCK_META = {
+      today:    { label: '今日 · 6/6(金)', sub: 'プレーリー · 赤 ★3' },
+      tomorrow: { label: '明日 · 6/7(土)', sub: '森 · 黒' },
+    };
+
+    // 指定時刻から各スロットの状態とプログレスを計算
+    function computeSlots(now) {
+      return SLOT_DEFS.map(s => {
+        const n = (s.endMin > 1440 && now < s.startMin) ? now + 1440 : now;
+        if (n >= s.endMin)       return { time: s.label, state: 'past',   progress: 100 };
+        if (n >= s.startMin)     return { time: s.label, state: 'active', progress: Math.round((n - s.startMin) / (s.endMin - s.startMin) * 100) };
+                                 return { time: s.label, state: 'future', progress: 0 };
+      });
+    }
+
+    // 指定時刻からインジケーターポジション（0-6）を計算
+    function computePos(now) {
+      for (let i = 0; i < SLOT_DEFS.length; i++) {
+        const s = SLOT_DEFS[i];
+        const n = (s.endMin > 1440 && now < s.startMin) ? now + 1440 : now;
+        if (n >= s.startMin && n < s.endMin) return i * 2 + 1;
+      }
+      if (now < SLOT_DEFS[0].startMin) return 0;
+      for (let i = 0; i < SLOT_DEFS.length - 1; i++) {
+        const endMin = SLOT_DEFS[i].endMin > 1440 ? SLOT_DEFS[i].endMin - 1440 : SLOT_DEFS[i].endMin;
+        if (now >= endMin && now < SLOT_DEFS[i + 1].startMin) return i * 2 + 2;
+      }
+      return 6;
+    }
+
+    function placeIndicator(col, pos) {
       const indicator = document.createElement('span');
       indicator.textContent = '▶';
       indicator.className = 'time-indicator';
       col.appendChild(indicator);
-
       requestAnimationFrame(() => {
         const gaps = col.querySelectorAll('.time-gap');
         const blocks = col.querySelectorAll('.occ-block');
-        const targetEl = currentPos % 2 === 0
-          ? gaps[currentPos / 2]
-          : blocks[(currentPos - 1) / 2];
-
+        const targetEl = pos % 2 === 0 ? gaps[pos / 2] : blocks[(pos - 1) / 2];
         if (!targetEl) { indicator.remove(); return; }
         indicator.style.top = (targetEl.offsetTop + targetEl.offsetHeight / 2 - 5) + 'px';
         indicator.style.left = '-12px';
       });
     }
 
-    // モックデータ（固定）
-    const MOCK = {
-      today: {
-        label: '今日 · 6/6(金)',
-        sub: 'プレーリー · 赤 ★3',
-        slots: [
-          { time: '14:15 - 15:10', state: 'past',   progress: 100 },
-          { time: '19:15 - 20:10', state: 'active',  progress: 40  },
-          { time: '23:15 - 00:10', state: 'future',  progress: 0   },
-        ],
-      },
-      tomorrow: {
-        label: '明日 · 6/7(土)',
-        sub: '森 · 黒',
-        slots: [
-          { time: '14:15 - 15:10', state: 'future', progress: 0 },
-          { time: '19:15 - 20:10', state: 'future', progress: 0 },
-          { time: '23:15 - 00:10', state: 'future', progress: 0 },
-        ],
-      },
-    };
-
-    function buildColumn(data, isToday, currentPos) {
+    function buildColumn(meta, slots, isToday, pos) {
       const col = document.createElement('div');
       col.className = 'day-column' + (isToday ? ' today-col' : '');
-      col.innerHTML = `
-        <div class="col-header">${data.label}</div>
-        <div class="col-sub">${data.sub}</div>
-      `;
+      col.innerHTML = `<div class="col-header">${meta.label}</div><div class="col-sub">${meta.sub}</div>`;
 
       if (isToday) {
-        // ギャップ div とブロックを交互に挿入（gap0, block0, gap1, block1, gap2, block2, gap3）
-        for (let i = 0; i <= data.slots.length; i++) {
-          const gap = document.createElement('div');
-          gap.className = 'time-gap';
-          col.appendChild(gap);
-
-          if (i < data.slots.length) {
-            const slot = data.slots[i];
+        for (let i = 0; i <= slots.length; i++) {
+          col.appendChild(Object.assign(document.createElement('div'), { className: 'time-gap' }));
+          if (i < slots.length) {
+            const slot = slots[i];
             const block = document.createElement('div');
             block.className = `occ-block ${slot.state}`;
-            block.innerHTML = `
-              <div class="occ-fill" style="width:${slot.progress}%"></div>
-              <span class="occ-time">${slot.time}</span>
-            `;
+            block.innerHTML = `<div class="occ-fill" style="width:${slot.progress}%"></div><span class="occ-time">${slot.time}</span>`;
             col.appendChild(block);
           }
         }
-        placeIndicator(col, data.slots, currentPos);
+        placeIndicator(col, pos);
       } else {
-        data.slots.forEach(slot => {
+        slots.forEach(slot => {
           const block = document.createElement('div');
           block.className = `occ-block ${slot.state}`;
-          block.innerHTML = `
-            <div class="occ-fill" style="width:${slot.progress}%"></div>
-            <span class="occ-time">${slot.time}</span>
-          `;
+          block.innerHTML = `<div class="occ-fill" style="width:${slot.progress}%"></div><span class="occ-time">${slot.time}</span>`;
           col.appendChild(block);
         });
       }
-
       return col;
     }
 
-    const card = document.getElementById('two-day-card');
-    card.appendChild(buildColumn(MOCK.today, true, MOCK_POSITION));
-    const div = document.createElement('div');
-    div.className = 'col-divider';
-    card.appendChild(div);
-    card.appendChild(buildColumn(MOCK.tomorrow, false, null));
+    function renderCard(nowMin, pos) {
+      const todaySlots = computeSlots(nowMin);
+      const tomorrowSlots = SLOT_DEFS.map(s => ({ time: s.label, state: 'future', progress: 0 }));
+      const card = document.getElementById('two-day-card');
+      card.innerHTML = '';
+      card.appendChild(buildColumn(MOCK_META.today, todaySlots, true, pos));
+      card.appendChild(Object.assign(document.createElement('div'), { className: 'col-divider' }));
+      card.appendChild(buildColumn(MOCK_META.tomorrow, tomorrowSlots, false, null));
+    }
+
+    const timeInput = document.getElementById('mock-time');
+    const posSelect = document.getElementById('mock-pos');
+
+    function onTimeChange() {
+      const now = timeToMin(timeInput.value);
+      const pos = computePos(now);
+      posSelect.value = pos;
+      renderCard(now, pos);
+    }
+
+    function onPosChange() {
+      renderCard(timeToMin(timeInput.value), parseInt(posSelect.value));
+    }
+
+    timeInput.addEventListener('change', onTimeChange);
+    posSelect.addEventListener('change', onPosChange);
+    onTimeChange();
   </script>
 </body>
 </html>
