@@ -198,3 +198,105 @@ body {
   text-align: center; color: var(--text-tertiary);
   padding: 32px 0; font-size: 15px;
 }
+
+/* ── 2列カード ── */
+.two-day-card {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 12px;
+}
+
+.col-divider {
+  background: var(--separator);
+  border-radius: 1px;
+}
+
+.day-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.col-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  margin-bottom: 2px;
+}
+
+.col-reward {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.col-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ── Occurrence Block ── */
+.occ-block {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.occ-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.occ-time {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+.occ-block.past .occ-fill  { width: 100%; background: #e5e5ea; }
+.occ-block.past .occ-time  { color: var(--text-tertiary); font-weight: 500; }
+
+.occ-block.active           { background: #FFFE86; }
+.occ-block.active .occ-fill { background: #e5e5ea; }
+.occ-block.active .occ-time { color: var(--text-primary); font-weight: 700; }
+
+.occ-block.future           { background: var(--bg-secondary); }
+.occ-block.future .occ-time { color: var(--text-primary); font-weight: 600; }
+
+/* ── 今日列インジケーター ── */
+.today-col {
+  position: relative;
+  overflow: visible;
+}
+
+.time-indicator {
+  position: absolute;
+  color: #ff3b30;
+  font-size: 10px;
+  line-height: 1;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── シャードなし列 ── */
+.no-shard-col {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
