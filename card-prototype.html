@@ -146,26 +146,13 @@
       requestAnimationFrame(() => {
         const gaps = col.querySelectorAll('.time-gap');
         const blocks = col.querySelectorAll('.occ-block');
+        const targetEl = currentPos % 2 === 0
+          ? gaps[currentPos / 2]
+          : blocks[(currentPos - 1) / 2];
 
-        if (currentPos % 2 === 0) {
-          // ギャップ位置 (0, 2, 4, 6)
-          const gapIdx = currentPos / 2;
-          const gap = gaps[gapIdx];
-          if (!gap) { indicator.remove(); return; }
-          const y = gap.offsetTop + gap.offsetHeight / 2 - 5;
-          indicator.style.top = y + 'px';
-          indicator.style.left = '-2px';
-        } else {
-          // スロット位置 (1, 3, 5)
-          const slotIdx = (currentPos - 1) / 2;
-          const block = blocks[slotIdx];
-          if (!block) { indicator.remove(); return; }
-          const progress = slots[slotIdx].progress;
-          const y = block.offsetTop + block.offsetHeight / 2 - 5;
-          const x = block.offsetLeft + block.offsetWidth * progress / 100 - 4;
-          indicator.style.top = y + 'px';
-          indicator.style.left = x + 'px';
-        }
+        if (!targetEl) { indicator.remove(); return; }
+        indicator.style.top = (targetEl.offsetTop + targetEl.offsetHeight / 2 - 5) + 'px';
+        indicator.style.left = '-12px';
       });
     }
 
