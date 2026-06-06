@@ -266,11 +266,11 @@ body {
   white-space: nowrap;
 }
 
-.occ-block.past .occ-fill  { width: 100%; background: #e5e5ea; }
+.occ-block.past .occ-fill  { width: 100%; background: var(--separator); }
 .occ-block.past .occ-time  { color: var(--text-tertiary); font-weight: 500; }
 
 .occ-block.active           { background: #FFFE86; }
-.occ-block.active .occ-fill { background: #e5e5ea; }
+.occ-block.active .occ-fill { background: var(--separator); }
 .occ-block.active .occ-time { color: var(--text-primary); font-weight: 700; }
 
 .occ-block.future           { background: var(--bg-secondary); }
@@ -284,7 +284,7 @@ body {
 
 .time-indicator {
   position: absolute;
-  color: #ff3b30;
+  color: var(--red);
   font-size: 10px;
   line-height: 1;
   z-index: 10;
