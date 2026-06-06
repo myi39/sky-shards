@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>card 関数テスト</title>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="../shard.js"></script>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #fff; }
+    .pass { color: green; }
+    .fail { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h2>card 関数テスト</h2>
+<div id="results"></div>
+<script>
+  /* computeSlots と computePos を app.js のDOM依存を回避してインライン定義 */
+  function computeSlots(info, nowSky) {
+    const fmt = dt => dt.toFormat('HH:mm');
+    return info.occurrences.map(occ => {
+      const time = `${fmt(occ.landLocal)} - ${fmt(occ.endLocal)}`;
+      if (nowSky >= occ.end)  return { time, state: 'past',   progress: 100 };
+      if (nowSky >= occ.land) return { time, state: 'active', progress: Math.round((nowSky - occ.land) / (occ.end - occ.land) * 100) };
+                              return { time, state: 'future', progress: 0 };
+    });
+  }
+
+  function computePos(info, nowSky) {
+    const occs = info.occurrences;
+    for (let i = 0; i < occs.length; i++) {
+      if (nowSky >= occs[i].land && nowSky < occs[i].end) return i * 2 + 1;
+    }
+    if (nowSky < occs[0].land) return 0;
+    for (let i = 0; i < occs.length - 1; i++) {
+      if (nowSky >= occs[i].end && nowSky < occs[i + 1].land) return i * 2 + 2;
+    }
+    return 6;
+  }
+
+  const results = [];
+  function assert(condition, label) { results.push({ ok: condition, label }); }
+
+  /* テスト対象: 2026-06-07(日) forest・雨林の端
+   * SHARD_CONFIGS[2]: offset=7h40m, interval=6h
+   * occ[0]: land≈07:49 PDT, end=11:40 PDT
+   * occ[1]: land≈13:49 PDT, end=17:40 PDT
+   * occ[2]: land≈19:49 PDT, end=23:40 PDT
+   */
+  const skyDate = luxon.DateTime.fromObject(
+    { year: 2026, month: 6, day: 7, hour: 12 },
+    { zone: 'America/Los_Angeles' }
+  );
+  const info = getShardInfo(skyDate);
+
+  /* T1: 06:00 PDT — 全スロット前 → 全 future, pos=0 */
+  const t1     = skyDate.set({ hour: 6,  minute: 0 });
+  const slots1 = computeSlots(info, t1);
+  assert(slots1[0].state === 'future', 'T1 slot0: future');
+  assert(slots1[1].state === 'future', 'T1 slot1: future');
+  assert(slots1[2].state === 'future', 'T1 slot2: future');
+  assert(computePos(info, t1) === 0,   'T1 pos: 0');
+
+  /* T2: 09:00 PDT — slot0 開催中 → active, pos=1 */
+  const t2     = skyDate.set({ hour: 9,  minute: 0 });
+  const slots2 = computeSlots(info, t2);
+  assert(slots2[0].state === 'active',                          'T2 slot0: active');
+  assert(slots2[0].progress > 0 && slots2[0].progress < 100,   'T2 slot0: progress 0-100');
+  assert(slots2[1].state === 'future',                          'T2 slot1: future');
+  assert(computePos(info, t2) === 1,                            'T2 pos: 1');
+
+  /* T3: 12:30 PDT — slot0 終了後・slot1 前 → past/future, pos=2 */
+  const t3     = skyDate.set({ hour: 12, minute: 30 });
+  const slots3 = computeSlots(info, t3);
+  assert(slots3[0].state === 'past',   'T3 slot0: past');
+  assert(slots3[0].progress === 100,   'T3 slot0: progress=100');
+  assert(slots3[1].state === 'future', 'T3 slot1: future');
+  assert(computePos(info, t3) === 2,   'T3 pos: 2');
+
+  /* T4: 23:50 PDT — 全スロット終了後 → 全 past, pos=6 */
+  const t4     = skyDate.set({ hour: 23, minute: 50 });
+  const slots4 = computeSlots(info, t4);
+  assert(slots4[0].state === 'past', 'T4 slot0: past');
+  assert(slots4[1].state === 'past', 'T4 slot1: past');
+  assert(slots4[2].state === 'past', 'T4 slot2: past');
+  assert(computePos(info, t4) === 6,  'T4 pos: 6');
+
+  const div = document.getElementById('results');
+  div.innerHTML = results.map(r =>
+    `<div class="${r.ok ? 'pass' : 'fail'}">${r.ok ? '✓' : '✗'} ${r.label}</div>`
+  ).join('') + `<p><strong>${results.filter(r => r.ok).length}/${results.length} passed</strong></p>`;
+</script>
+</body>
+</html>

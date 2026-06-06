@@ -102,6 +102,28 @@ function renderCalendar(year, month) {
   renderCalendarGrid(year, month, document.getElementById('calendar-grid'));
 }
 
+function computeSlots(info, nowSky) {
+  const fmt = dt => dt.toFormat('HH:mm');
+  return info.occurrences.map(occ => {
+    const time = `${fmt(occ.landLocal)} - ${fmt(occ.endLocal)}`;
+    if (nowSky >= occ.end)  return { time, state: 'past',   progress: 100 };
+    if (nowSky >= occ.land) return { time, state: 'active', progress: Math.round((nowSky - occ.land) / (occ.end - occ.land) * 100) };
+                            return { time, state: 'future', progress: 0 };
+  });
+}
+
+function computePos(info, nowSky) {
+  const occs = info.occurrences;
+  for (let i = 0; i < occs.length; i++) {
+    if (nowSky >= occs[i].land && nowSky < occs[i].end) return i * 2 + 1;
+  }
+  if (nowSky < occs[0].land) return 0;
+  for (let i = 0; i < occs.length - 1; i++) {
+    if (nowSky >= occs[i].end && nowSky < occs[i + 1].land) return i * 2 + 2;
+  }
+  return 6;
+}
+
 function renderNextShard() {
   const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
   const info    = findNextShard(nowSky);
