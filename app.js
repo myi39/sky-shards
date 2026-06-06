@@ -124,6 +124,71 @@ function computePos(info, nowSky) {
   return 6;
 }
 
+function placeIndicator(col, pos) {
+  const indicator   = document.createElement('span');
+  indicator.textContent = '▶';
+  indicator.className   = 'time-indicator';
+  col.appendChild(indicator);
+  requestAnimationFrame(() => {
+    const blocks = Array.from(col.querySelectorAll('.occ-block'));
+    if (!blocks.length) { indicator.remove(); return; }
+    let y;
+    if (pos === 0) {
+      y = blocks[0].offsetTop - 8;
+    } else if (pos === 6) {
+      const last = blocks[blocks.length - 1];
+      y = last.offsetTop + last.offsetHeight - 2;
+    } else if (pos % 2 === 0) {
+      const prev = blocks[pos / 2 - 1];
+      const next = blocks[pos / 2];
+      y = (prev.offsetTop + prev.offsetHeight + next.offsetTop) / 2 - 5;
+    } else {
+      const block = blocks[(pos - 1) / 2];
+      y = block.offsetTop + block.offsetHeight / 2 - 5;
+    }
+    indicator.style.top  = y + 'px';
+    indicator.style.left = '-12px';
+  });
+}
+
+function buildColumn(info, slots, isToday, pos) {
+  const col      = document.createElement('div');
+  col.className  = 'day-column' + (isToday ? ' today-col' : '');
+  const dayLabel = isToday ? '今日' : '明日';
+  const dateStr  = info.date.setLocale('ja').toFormat('M/d(EEE)');
+  const badgeCls = info.isRed ? 'red' : 'black';
+  const badgeTxt = info.isRed ? '🔴 赤' : '⚫ 黒';
+  const reward   = info.isRed ? `${info.rewardAC}本` : '大キャン4つ分';
+  col.innerHTML = `
+    <div class="col-header">${dayLabel} · ${dateStr}</div>
+    <div class="col-reward">
+      <span class="shard-badge ${badgeCls}">${badgeTxt}</span>
+      <span class="reward-text">${reward}</span>
+    </div>
+    <div class="col-sub">${info.realmJa} · ${info.location}</div>
+  `;
+  slots.forEach(slot => {
+    const block     = document.createElement('div');
+    block.className = `occ-block ${slot.state}`;
+    block.innerHTML = `<div class="occ-fill" style="width:${slot.progress}%"></div><span class="occ-time">${slot.time}</span>`;
+    col.appendChild(block);
+  });
+  if (isToday && pos !== null) placeIndicator(col, pos);
+  return col;
+}
+
+function buildNoShardColumn(isToday, skyDate) {
+  const col     = document.createElement('div');
+  col.className = 'day-column';
+  const dayLabel = isToday ? '今日' : '明日';
+  const dateStr  = skyDate.setLocale('ja').toFormat('M/d(EEE)');
+  col.innerHTML  = `
+    <div class="col-header">${dayLabel} · ${dateStr}</div>
+    <div class="no-shard-col">この日はシャードなし</div>
+  `;
+  return col;
+}
+
 function renderNextShard() {
   const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
   const info    = findNextShard(nowSky);
