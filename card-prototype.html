@@ -170,7 +170,8 @@
     // 指定時刻から各スロットの状態とプログレスを計算
     function computeSlots(now) {
       return SLOT_DEFS.map(s => {
-        const n = (s.endMin > 1440 && now < s.startMin) ? now + 1440 : now;
+        // 日跨ぎスロットで早朝（00:00〜end時刻の間）の場合のみ +1440 して比較
+        const n = (s.endMin > 1440 && now < s.endMin - 1440) ? now + 1440 : now;
         if (n >= s.endMin)       return { time: s.label, state: 'past',   progress: 100 };
         if (n >= s.startMin)     return { time: s.label, state: 'active', progress: Math.round((n - s.startMin) / (s.endMin - s.startMin) * 100) };
                                  return { time: s.label, state: 'future', progress: 0 };
@@ -181,7 +182,7 @@
     function computePos(now) {
       for (let i = 0; i < SLOT_DEFS.length; i++) {
         const s = SLOT_DEFS[i];
-        const n = (s.endMin > 1440 && now < s.startMin) ? now + 1440 : now;
+        const n = (s.endMin > 1440 && now < s.endMin - 1440) ? now + 1440 : now;
         if (n >= s.startMin && n < s.endMin) return i * 2 + 1;
       }
       if (now < SLOT_DEFS[0].startMin) return 0;
