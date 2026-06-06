@@ -29,14 +29,17 @@
     }
 
     .col-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
       font-size: 12px;
       font-weight: 700;
       color: var(--text-primary);
       letter-spacing: -0.2px;
+      margin-bottom: 2px;
+    }
+
+    .col-reward {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       margin-bottom: 2px;
     }
 
@@ -217,7 +220,8 @@
       col.className = 'day-column' + (isToday ? ' today-col' : '');
       const badge = `<span class="shard-badge ${meta.isRed ? 'red' : 'black'}">${meta.isRed ? '🔴 赤' : '⚫ 黒'}</span>`;
       col.innerHTML = `
-        <div class="col-header">${meta.date} ${badge} <span class="reward-text">${meta.reward}</span></div>
+        <div class="col-header">${meta.date}</div>
+        <div class="col-reward">${badge}<span class="reward-text">${meta.reward}</span></div>
         <div class="col-sub">${meta.location}</div>
       `;
 
