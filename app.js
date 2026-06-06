@@ -1,4 +1,4 @@
-/* global luxon, getShardInfo, findNextShard */
+/* global luxon, getShardInfo */
 
 const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -189,23 +189,40 @@ function buildNoShardColumn(isToday, skyDate) {
   return col;
 }
 
-function renderNextShard() {
-  const nowSky  = luxon.DateTime.now().setZone('America/Los_Angeles');
-  const info    = findNextShard(nowSky);
-  const nextOcc = info.occurrences.find(occ => nowSky < occ.end) || info.occurrences[0];
-  const isActive = nowSky >= nextOcc.land;
-  const label    = isActive ? '現在シャード中' : '次のシャード';
+function renderTwoDayCard() {
+  const nowSky       = luxon.DateTime.now().setZone('America/Los_Angeles');
+  const todayInfo    = getShardInfo(nowSky);
+  const tomorrowInfo = getShardInfo(nowSky.plus({ days: 1 }));
 
-  document.getElementById('next-shard-card').innerHTML = `
-    <div class="next-shard-label-row">
-      <div class="next-shard-label">${label}</div>
-      ${badgeAndRewardHTML(info)}
-    </div>
-    ${timeRangeHTML(nextOcc.landLocal, nextOcc.endLocal)}
-    <div class="next-shard-meta">
-      <span class="next-shard-location">${info.realmJa} &nbsp;·&nbsp; ${info.location}</span>
-    </div>
-  `;
+  const card = document.getElementById('next-shard-card');
+  card.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'two-day-card';
+
+  if (todayInfo.hasShard) {
+    wrap.appendChild(buildColumn(todayInfo, computeSlots(todayInfo, nowSky), true, computePos(todayInfo, nowSky)));
+  } else {
+    wrap.appendChild(buildNoShardColumn(true, todayInfo.date));
+  }
+
+  const divider = document.createElement('div');
+  divider.className = 'col-divider';
+  wrap.appendChild(divider);
+
+  if (tomorrowInfo.hasShard) {
+    const fmt          = dt => dt.toFormat('HH:mm');
+    const tomorrowSlots = tomorrowInfo.occurrences.map(occ => ({
+      time:     `${fmt(occ.landLocal)} - ${fmt(occ.endLocal)}`,
+      state:    'future',
+      progress: 0,
+    }));
+    wrap.appendChild(buildColumn(tomorrowInfo, tomorrowSlots, false, null));
+  } else {
+    wrap.appendChild(buildNoShardColumn(false, tomorrowInfo.date));
+  }
+
+  card.appendChild(wrap);
 }
 
 function showDetail(skyDate, info) {
@@ -296,8 +313,8 @@ function slideMonth(delta) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderCalendar(currentYear, currentMonth);
-  renderNextShard();
-  setInterval(renderNextShard, 60_000);
+  renderTwoDayCard();
+  setInterval(renderTwoDayCard, 60_000);
 
   document.getElementById('prev-month').addEventListener('click', () => slideMonth(-1));
   document.getElementById('next-month').addEventListener('click', () => slideMonth(1));
