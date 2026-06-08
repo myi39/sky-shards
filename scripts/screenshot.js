@@ -17,10 +17,8 @@ async function main() {
     await page.waitForSelector('.page-label');
     await page.waitForSelector('.calendar-section');
 
-    const headerEl   = await page.$('.page-label');
-    const calendarEl = await page.$('.calendar-section');
-    const headerBox  = await headerEl.boundingBox();
-    const calBox     = await calendarEl.boundingBox();
+    const headerBox  = await page.locator('.page-label').first().boundingBox();
+    const calBox     = await page.locator('.calendar-section').first().boundingBox();
 
     if (!headerBox) throw new Error('.page-label has no bounding box (element may be hidden)');
     if (!calBox)    throw new Error('.calendar-section has no bounding box (element may be hidden)');
