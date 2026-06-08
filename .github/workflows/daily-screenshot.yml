@@ -1,0 +1,61 @@
+name: Daily Screenshot to Discord
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # UTC 07:00 = LA 00:00 (PDT: 夏時間)
+    - cron: '0 8 * * *'  # UTC 08:00 = LA 00:00 (PST: 冬時間)
+  workflow_dispatch:       # 手動実行（テスト用）
+
+jobs:
+  check-time:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger — skipping time check"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            LA_HOUR=$(TZ="America/Los_Angeles" date +%-H)
+            echo "Current LA time: hour $LA_HOUR"
+            if [ "$LA_HOUR" -eq 0 ]; then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              echo "Not midnight in LA (hour=$LA_HOUR), skipping"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  screenshot-and-notify:
+    needs: check-time
+    if: needs.check-time.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Take screenshot
+        run: node scripts/screenshot.js --prod
+
+      - name: Send to Discord
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_TEST }}"
+          else
+            WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_PROD }}"
+          fi
+          curl -X POST \
+            -F "payload_json={\"content\":\"🌠 今日のSky Shards スケジュール\"}" \
+            -F "file=@images/shard_info_discord.png" \
+            "$WEBHOOK_URL"
