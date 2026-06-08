@@ -5,36 +5,45 @@ const { pathToFileURL } = require('url');
 
 async function main() {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
-  const page = await browser.newPage();
+  try {
+    const page = await browser.newPage();
 
-  await page.setViewportSize({ width: 480, height: 1200 });
+    await page.setViewportSize({ width: 480, height: 1200 });
 
-  const indexPath = pathToFileURL(path.resolve('index.html')).href;
-  await page.goto(indexPath, { waitUntil: 'networkidle' });
+    const indexPath = pathToFileURL(path.resolve(__dirname, '../index.html')).href;
+    await page.goto(indexPath, { waitUntil: 'networkidle' });
 
-  await page.waitForSelector('#calendar-grid .day-cell');
+    await page.waitForSelector('#calendar-grid .day-cell');
+    await page.waitForSelector('.page-label');
+    await page.waitForSelector('.calendar-section');
 
-  const headerEl   = await page.$('.page-label');
-  const calendarEl = await page.$('.calendar-section');
-  const headerBox  = await headerEl.boundingBox();
-  const calBox     = await calendarEl.boundingBox();
+    const headerEl   = await page.$('.page-label');
+    const calendarEl = await page.$('.calendar-section');
+    const headerBox  = await headerEl.boundingBox();
+    const calBox     = await calendarEl.boundingBox();
 
-  const clip = {
-    x:      Math.min(headerBox.x, calBox.x),
-    y:      headerBox.y,
-    width:  Math.max(headerBox.width, calBox.width),
-    height: calBox.y + calBox.height - headerBox.y,
-  };
+    if (!headerBox) throw new Error('.page-label has no bounding box (element may be hidden)');
+    if (!calBox)    throw new Error('.calendar-section has no bounding box (element may be hidden)');
 
-  fs.mkdirSync('images', { recursive: true });
+    const clip = {
+      x:      Math.min(headerBox.x, calBox.x),
+      y:      headerBox.y,
+      width:  Math.max(headerBox.width, calBox.width),
+      height: calBox.y + calBox.height - headerBox.y,
+    };
 
-  await page.screenshot({
-    path: 'images/shard_info_discord.png',
-    clip,
-  });
+    const outDir = path.resolve(__dirname, '../images');
+    fs.mkdirSync(outDir, { recursive: true });
 
-  await browser.close();
-  console.log('Saved: images/shard_info_discord.png');
+    await page.screenshot({
+      path: path.join(outDir, 'shard_info_discord.png'),
+      clip,
+    });
+
+    console.log('Saved: images/shard_info_discord.png');
+  } finally {
+    await browser.close();
+  }
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
