@@ -34,10 +34,24 @@ body {
 .next-shard-section { margin-bottom: 24px; }
 
 .next-shard-card {
-  background: var(--bg-secondary);
+  background: #f0f0f4;
   border-radius: 16px;
   padding: 16px;
 }
+.next-shard-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.next-shard-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+.next-shard-meta {
+  display: flex; align-items: center;
+  gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.next-shard-location { font-size: 13px; color: var(--text-secondary); }
 .badge-reward { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .reward-text  { font-size: 12px; color: var(--text-secondary); }
 
@@ -46,6 +60,15 @@ body {
 .time-col { display: flex; flex-direction: column; }
 .time-date { font-size: 11px; color: var(--text-tertiary); margin-bottom: 1px; }
 
+.next-shard-card .time-value {
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -1.5px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.next-shard-card .time-sep {
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -1.5px; line-height: 1;
+}
 .occurrence-card .time-value {
   font-size: 22px; font-weight: 700;
   letter-spacing: -0.5px; line-height: 1;
@@ -105,26 +128,36 @@ body {
   transition: background 0.1s;
   user-select: none;
 }
-.day-cell:hover:not(.empty) { background: var(--bg-secondary); }
-.day-cell:active:not(.empty) { background: #e5e5ea; }
+@media (hover: hover) {
+  .day-cell:hover:not(.empty) { background: var(--bg-secondary); }
+}
+.day-cell.pressing:not(.empty) { background: #e5e5ea; }
 .day-cell.empty { cursor: default; pointer-events: none; }
 
 .day-number {
   font-size: 13px; font-weight: 500; line-height: 1;
   color: var(--text-primary);
-}
-.day-cell.today .day-number {
   width: 26px; height: 26px;
-  background: #1d1d1f; color: #ffffff;
-  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 12px;
+  border-radius: 50%;
 }
 .day-cell.no-shard .day-number { color: var(--text-tertiary); }
-
-.shard-indicator { width: 5px; height: 5px; border-radius: 50%; }
-.shard-indicator.red   { background: var(--red); }
-.shard-indicator.black { background: var(--gray); }
+.day-cell.shard-red .day-number {
+  border: 1.5px solid var(--red);
+  color: var(--red);
+  font-size: 12px;
+}
+.day-cell.shard-black .day-number {
+  border: 1.5px solid var(--gray);
+  color: var(--gray);
+  font-size: 12px;
+}
+.day-cell.today .day-number {
+  font-weight: 700; font-size: 12px;
+  color: #ffffff; background: #aeaeb2;
+}
+.day-cell.today.shard-red .day-number   { background: var(--red);   border: none; }
+.day-cell.today.shard-black .day-number { background: #1d1d1f; border: none; }
 
 /* ── Bottom Sheet ── */
 .sheet-backdrop {
@@ -175,46 +208,6 @@ body {
   padding: 32px 0; font-size: 15px;
 }
 
-/* ── 2列カード ── */
-.two-day-card {
-  display: grid;
-  grid-template-columns: 1fr 1px 1fr;
-  gap: 12px;
-}
-
-.col-divider {
-  background: var(--separator);
-  border-radius: 1px;
-}
-
-.day-column {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.col-header {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
-  margin-bottom: 2px;
-}
-
-.col-reward {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-
-.col-sub {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
 /* ── Occurrence Block ── */
 .occ-block {
   position: relative;
@@ -249,15 +242,10 @@ body {
 .occ-block.active .occ-fill { background: var(--separator); }
 .occ-block.active .occ-time { color: var(--text-primary); font-weight: 700; }
 
-.occ-block.future           { background: var(--bg-secondary); }
+.occ-block.future           { background: #FEF5DA; }
 .occ-block.future .occ-time { color: var(--text-primary); font-weight: 600; }
 
-/* ── 今日列インジケーター ── */
-.today-col {
-  position: relative;
-  overflow: visible;
-}
-
+/* ── 今日インジケーター ── */
 .time-indicator {
   position: absolute;
   color: var(--red);
@@ -267,12 +255,64 @@ body {
   pointer-events: none;
 }
 
-/* ── シャードなし列 ── */
-.no-shard-col {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  font-size: 13px;
+/* ── Day Card (B-style) ── */
+.day-card-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 6px;
+}
+.day-card-badge {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; margin-bottom: 4px;
+}
+.day-card-reward { color: var(--text-secondary); font-weight: 400; }
+.day-card-loc {
+  font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;
+}
+
+/* スロットグリッド */
+.slot-grid-wrap {
+  position: relative; margin-bottom: 10px;
+  padding: 0 10px; overflow: hidden;
+}
+.slot-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+}
+.slot-col {
+  border-radius: 8px; padding: 9px 6px;
+  text-align: center; line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid #e3e3e8;
+}
+.slot-col.slot-past   { background: #e3e3e8; }
+.slot-col.slot-future { background: #FEF5DA; }
+.slot-time-main { font-size: 13px; font-weight: 700; margin-bottom: 1px; }
+.slot-time-end  { font-size: 11px; }
+.slot-col.slot-past .slot-time-main { color: #aeaeb2; font-weight: 500; }
+.slot-col.slot-past .slot-time-end  { color: #c7c7cc; }
+.slot-col.slot-future .slot-time-main { color: var(--text-primary); }
+.slot-col.slot-future .slot-time-end  { color: var(--text-secondary); }
+
+/* 現在時刻ライン */
+.slot-now-line {
+  position: absolute; top: 0; bottom: 0; width: 2.5px;
+  background: rgba(255, 100, 80, 0.75);
+  border-radius: 2px; z-index: 1; pointer-events: none;
+  transform: translateX(-50%);
+}
+
+/* 明日セクション */
+.day-card-divider {
+  border: none; border-top: 1px solid var(--separator); margin: 8px 0;
+}
+.day-card-tomorrow {
+  font-size: 10px; color: var(--text-tertiary); line-height: 1.6;
+}
+.day-card-tomorrow b { color: var(--text-secondary); font-weight: 600; }
+
+/* シャードなし */
+.today-no-shard {
+  border-radius: 8px; padding: 10px 12px;
+  background: #ebebf0; text-align: center;
+  font-size: 12px; color: var(--text-tertiary);
+  margin-bottom: 10px;
 }

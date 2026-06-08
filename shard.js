@@ -61,7 +61,7 @@ const MAP_NAMES = {
 };
 
 const REALMS   = ['prairie', 'forest', 'valley', 'wasteland', 'vault'];
-const REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨てられた地', vault: '書庫' };
+const REALM_JA = { prairie: '草原', forest: '雨林', valley: '峡谷', wasteland: '捨て地', vault: '書庫' };
 
 // 黒シャード：光のかけら 200粒（大キャンドル4つ分 = 大キャン×4）
 const BLACK_SHARD_REWARD_FRAGMENTS = 200;

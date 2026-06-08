@@ -1,4 +1,4 @@
-/* global luxon, getShardInfo */
+/* global luxon, getShardInfo, findNextShard */
 
 const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -7,14 +7,14 @@ let currentYear  = _initSky.year;
 let currentMonth = _initSky.month;
 
 function rewardHTML(info) {
-  if (info.isRed) return `<span class="reward-text">${info.rewardAC}本</span>`;
+  if (info.isRed) return `<span class="reward-text">星キャン${info.rewardAC}本分</span>`;
   return `<span class="reward-text">大キャン4つ分</span>`;
 }
 
 function badgeAndRewardHTML(info) {
+  const label = info.isRed ? `星キャン${info.rewardAC}本分` : '大キャン4つ分';
   return `<div class="badge-reward">
-    <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴 赤' : '⚫ 黒'}</span>
-    ${rewardHTML(info)}
+    <span class="shard-badge ${info.isRed ? 'red' : 'black'}">${info.isRed ? '🔴' : '⚫'} ${label}</span>
   </div>`;
 }
 
@@ -69,6 +69,7 @@ function renderCalendarGrid(year, month, gridEl) {
     const classes = ['day-cell'];
     if (!info.hasShard) classes.push('no-shard');
     if (isToday)        classes.push('today');
+    if (info.hasShard)  classes.push(info.isRed ? 'shard-red' : 'shard-black');
     cell.className = classes.join(' ');
 
     const num = document.createElement('div');
@@ -76,13 +77,11 @@ function renderCalendarGrid(year, month, gridEl) {
     num.textContent = d;
     cell.appendChild(num);
 
-    if (info.hasShard) {
-      const dot = document.createElement('div');
-      dot.className = 'shard-indicator ' + (info.isRed ? 'red' : 'black');
-      cell.appendChild(dot);
-    }
-
-    cell.addEventListener('click', () => showDetail(skyDate, info));
+    cell.addEventListener('click', () => {
+      const prev = document.querySelector('.day-cell.pressing');
+      if (prev && prev !== cell) prev.classList.remove('pressing');
+      showDetail(skyDate, info);
+    });
     gridEl.appendChild(cell);
   }
 
@@ -102,127 +101,79 @@ function renderCalendar(year, month) {
   renderCalendarGrid(year, month, document.getElementById('calendar-grid'));
 }
 
-function computeSlots(info, nowSky) {
-  const fmt = dt => dt.toFormat('HH:mm');
-  return info.occurrences.map(occ => {
-    const time = `${fmt(occ.landLocal)} - ${fmt(occ.endLocal)}`;
-    if (nowSky >= occ.end)  return { time, state: 'past',   progress: 100 };
-    if (nowSky >= occ.land) return { time, state: 'active', progress: Math.round((nowSky - occ.land) / (occ.end - occ.land) * 100) };
-                            return { time, state: 'future', progress: 0 };
-  });
+function buildDayLabel(skyDate) {
+  const resetJST = skyDate.startOf('day').setZone('Asia/Tokyo');
+  return `${resetJST.month}/${resetJST.day}(${WEEKDAYS_JA[resetJST.weekday % 7]}) ${resetJST.toFormat('HH:mm')}-`;
 }
 
-function computePos(info, nowSky) {
-  const occs = info.occurrences;
-  for (let i = 0; i < occs.length; i++) {
-    if (nowSky >= occs[i].land && nowSky < occs[i].end) return i * 2 + 1;
-  }
-  if (nowSky < occs[0].land) return 0;
-  for (let i = 0; i < occs.length - 1; i++) {
-    if (nowSky >= occs[i].end && nowSky < occs[i + 1].land) return i * 2 + 2;
-  }
-  return 6;
-}
+function computeLineLeft(nowSky, occurrences) {
+  const first = occurrences[0];
+  const last  = occurrences[occurrences.length - 1];
+  if (nowSky < first.land) return '5px';
+  if (nowSky > last.end)   return 'calc(100% - 5px)';
 
-function placeIndicator(col, pos) {
-  const indicator   = document.createElement('span');
-  indicator.textContent = '▶';
-  indicator.className   = 'time-indicator';
-  col.appendChild(indicator);
-  requestAnimationFrame(() => {
-    const blocks = Array.from(col.querySelectorAll('.occ-block'));
-    if (!blocks.length) { indicator.remove(); return; }
-    let y;
-    if (pos === 0) {
-      y = blocks[0].offsetTop - 8;
-    } else if (pos === 6) {
-      const last = blocks[blocks.length - 1];
-      y = last.offsetTop + last.offsetHeight - 2;
-    } else if (pos % 2 === 0) {
-      const prev = blocks[pos / 2 - 1];
-      const next = blocks[pos / 2];
-      y = (prev.offsetTop + prev.offsetHeight + next.offsetTop) / 2 - 5;
-    } else {
-      const block = blocks[(pos - 1) / 2];
-      y = block.offsetTop + block.offsetHeight / 2 - 5;
+  for (let i = 0; i < occurrences.length; i++) {
+    const occ = occurrences[i];
+    if (nowSky >= occ.land && nowSky <= occ.end) {
+      const dur = occ.end.diff(occ.land).as('milliseconds');
+      const elp = nowSky.diff(occ.land).as('milliseconds');
+      const p   = Math.max(0, Math.min(1, elp / dur));
+      return `calc(${10 + i * 12}px + ${(i + p).toFixed(4)} * (100% - 44px) / 3)`;
     }
-    indicator.style.top  = y + 'px';
-    indicator.style.left = '-12px';
-  });
+    if (i < occurrences.length - 1 && nowSky > occ.end && nowSky < occurrences[i + 1].land) {
+      return `calc(${16 + i * 12}px + ${i + 1} * (100% - 44px) / 3)`;
+    }
+  }
+  return '5px';
 }
 
-function buildColumn(info, slots, isToday, pos) {
-  const col      = document.createElement('div');
-  col.className  = 'day-column' + (isToday ? ' today-col' : '');
-  const dayLabel = isToday ? '今日' : '明日';
-  const dateStr  = info.date.setLocale('ja').toFormat('M/d(EEE)');
-  const badgeCls = info.isRed ? 'red' : 'black';
-  const badgeTxt = info.isRed ? '🔴 赤' : '⚫ 黒';
-  const reward   = info.isRed ? `${info.rewardAC}本` : '大キャン4つ分';
-  col.innerHTML = `
-    <div class="col-header">${dayLabel} · ${dateStr}</div>
-    <div class="col-reward">
-      <span class="shard-badge ${badgeCls}">${badgeTxt}</span>
-      <span class="reward-text">${reward}</span>
-    </div>
-    <div class="col-sub">${info.realmJa} · ${info.location}</div>
-  `;
-  slots.forEach(slot => {
-    const block     = document.createElement('div');
-    block.className = `occ-block ${slot.state}`;
-    block.innerHTML = `<div class="occ-fill" style="width:${slot.progress}%"></div><span class="occ-time">${slot.time}</span>`;
-    col.appendChild(block);
-  });
-  if (isToday && pos !== null) placeIndicator(col, pos);
-  return col;
-}
-
-function buildNoShardColumn(isToday, skyDate) {
-  const col     = document.createElement('div');
-  col.className = 'day-column';
-  const dayLabel = isToday ? '今日' : '明日';
-  const dateStr  = skyDate.setLocale('ja').toFormat('M/d(EEE)');
-  col.innerHTML  = `
-    <div class="col-header">${dayLabel} · ${dateStr}</div>
-    <div class="no-shard-col">この日はシャードなし</div>
-  `;
-  return col;
-}
-
-function renderTwoDayCard() {
+function renderTodayCard() {
   const nowSky       = luxon.DateTime.now().setZone('America/Los_Angeles');
   const todayInfo    = getShardInfo(nowSky);
   const tomorrowInfo = getShardInfo(nowSky.plus({ days: 1 }));
 
-  const card = document.getElementById('next-shard-card');
-  card.innerHTML = '';
+  const todayLabel    = buildDayLabel(nowSky);
+  const tomorrowLabel = buildDayLabel(nowSky.plus({ days: 1 }));
 
-  const wrap = document.createElement('div');
-  wrap.className = 'two-day-card';
-
-  if (todayInfo.hasShard) {
-    wrap.appendChild(buildColumn(todayInfo, computeSlots(todayInfo, nowSky), true, computePos(todayInfo, nowSky)));
+  let todayHTML = '';
+  if (!todayInfo.hasShard) {
+    todayHTML = '<div class="today-no-shard">シャードなし</div>';
   } else {
-    wrap.appendChild(buildNoShardColumn(true, todayInfo.date));
+    const lineLeft = computeLineLeft(nowSky, todayInfo.occurrences);
+    const emoji    = todayInfo.isRed ? '🔴' : '⚫';
+    const reward   = todayInfo.isRed ? `星キャン${todayInfo.rewardAC}本分` : '大キャン4つ分';
+    const cols     = todayInfo.occurrences.map(occ => {
+      const cls   = nowSky > occ.end ? 'slot-past' : 'slot-future';
+      const start = occ.landLocal.toFormat('HH:mm');
+      const end   = occ.endLocal.toFormat('HH:mm');
+      return `<div class="slot-col ${cls}">
+        <div class="slot-time-main">${start}</div>
+        <div class="slot-time-end">- ${end}</div>
+      </div>`;
+    }).join('');
+    todayHTML = `
+      <div class="day-card-badge">${emoji} <span class="day-card-reward">${reward}</span></div>
+      <div class="day-card-loc">${todayInfo.realmJa} · ${todayInfo.location}</div>
+      <div class="slot-grid-wrap">
+        <div class="slot-now-line" style="left:${lineLeft}"></div>
+        <div class="slot-grid">${cols}</div>
+      </div>`;
   }
 
-  const divider = document.createElement('div');
-  divider.className = 'col-divider';
-  wrap.appendChild(divider);
-
+  let tomorrowHTML = 'シャードなし';
   if (tomorrowInfo.hasShard) {
-    const fmt          = dt => dt.toFormat('HH:mm');
-    const tomorrowSlots = tomorrowInfo.occurrences.map(occ => ({
-      time:     `${fmt(occ.landLocal)} - ${fmt(occ.endLocal)}`,
-      state:    'future',
-      progress: 0,
-    }));
-    wrap.appendChild(buildColumn(tomorrowInfo, tomorrowSlots, false, null));
-  } else {
-    wrap.appendChild(buildNoShardColumn(false, tomorrowInfo.date));
+    const emoji  = tomorrowInfo.isRed ? '🔴' : '⚫';
+    const reward = tomorrowInfo.isRed ? `星キャン${tomorrowInfo.rewardAC}本分` : '大キャン4つ分';
+    const times  = tomorrowInfo.occurrences.map(occ => occ.landLocal.toFormat('HH:mm') + '-').join(' / ');
+    tomorrowHTML = `${emoji} ${reward}<br>${tomorrowInfo.realmJa} · ${tomorrowInfo.location} &nbsp;&nbsp; ${times}`;
   }
 
-  card.appendChild(wrap);
+  document.getElementById('next-shard-card').innerHTML = `
+    <div class="day-card-label">${todayLabel}</div>
+    ${todayHTML}
+    <hr class="day-card-divider">
+    <div class="day-card-tomorrow"><b>${tomorrowLabel}</b><br>${tomorrowHTML}</div>
+  `;
 }
 
 function showDetail(skyDate, info) {
@@ -255,6 +206,8 @@ function showDetail(skyDate, info) {
 function hideSheet() {
   document.getElementById('bottom-sheet').classList.remove('open');
   document.getElementById('sheet-backdrop').classList.remove('visible');
+  const pressing = document.querySelector('.day-cell.pressing');
+  if (pressing) pressing.classList.remove('pressing');
 }
 
 function changeMonth(delta) {
@@ -313,8 +266,8 @@ function slideMonth(delta) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderCalendar(currentYear, currentMonth);
-  renderTwoDayCard();
-  setInterval(renderTwoDayCard, 60_000);
+  renderTodayCard();
+  setInterval(renderTodayCard, 60_000);
 
   document.getElementById('prev-month').addEventListener('click', () => slideMonth(-1));
   document.getElementById('next-month').addEventListener('click', () => slideMonth(1));
@@ -327,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let peekGrid     = null;
   let peekDelta    = 0;
   let isAnimating  = false;
+  let pressingCell = null;
   const AXIS_THRESHOLD  = 8;
   const SWIPE_THRESHOLD = 50;
 
@@ -339,6 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
     swipeStartY = e.touches[0].clientY;
     peekDelta   = 0;
     swipeAxis   = null;
+    const cell = e.target.closest('.day-cell:not(.empty)');
+    if (cell) { pressingCell = cell; cell.classList.add('pressing'); }
   }, { passive: true });
 
   calSection.addEventListener('touchmove', (e) => {
@@ -347,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dy = e.touches[0].clientY - swipeStartY;
 
     if (!swipeAxis && Math.hypot(dx, dy) > AXIS_THRESHOLD) {
+      if (pressingCell) { pressingCell.classList.remove('pressing'); pressingCell = null; }
       swipeAxis = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
       if (swipeAxis === 'h') {
         peekDelta = dx < 0 ? 1 : -1;
@@ -363,6 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }, { passive: false });
+
+  calSection.addEventListener('touchcancel', () => {
+    if (pressingCell) { pressingCell.classList.remove('pressing'); pressingCell = null; }
+  });
 
   calSection.addEventListener('touchend', (e) => {
     if (swipeAxis === 'h') {
