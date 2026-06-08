@@ -49,7 +49,7 @@ async function main() {
   const isSingleShot = SCENARIOS.length === 0 || process.argv[2] === '--prod';
 
   try {
-    const context = await browser.newContext({ deviceScaleFactor: 3 });
+    const context = await browser.newContext({ deviceScaleFactor: 3, timezoneId: 'Asia/Tokyo' });
     const page    = await context.newPage();
     await page.setViewportSize({ width: 390, height: 1200 });
 
