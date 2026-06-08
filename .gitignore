@@ -2,10 +2,8 @@
 .superpowers/
 .claude/
 
-# 依存関係（luxon は CDN 経由のため npm 不要）
+# 依存関係（luxon は CDN 経由。playwright-core は devDependencies として追跡）
 node_modules/
-package.json
-package-lock.json
 
 # 環境変数
 .env
