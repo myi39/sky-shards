@@ -3,10 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 
+const PADDING = 16;
+
 async function main() {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
-    const page = await browser.newPage();
+    const context = await browser.newContext({ deviceScaleFactor: 2 });
+    const page = await context.newPage();
 
     await page.setViewportSize({ width: 480, height: 1200 });
 
@@ -24,10 +27,10 @@ async function main() {
     if (!calBox)    throw new Error('.calendar-section has no bounding box (element may be hidden)');
 
     const clip = {
-      x:      Math.min(headerBox.x, calBox.x),
-      y:      headerBox.y,
-      width:  Math.max(headerBox.width, calBox.width),
-      height: calBox.y + calBox.height - headerBox.y,
+      x:      Math.max(0, Math.min(headerBox.x, calBox.x) - PADDING),
+      y:      Math.max(0, headerBox.y - PADDING),
+      width:  Math.max(headerBox.width, calBox.width) + PADDING * 2,
+      height: calBox.y + calBox.height - headerBox.y + PADDING * 2,
     };
 
     const outDir = path.resolve(__dirname, '../images');
