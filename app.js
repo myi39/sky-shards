@@ -2,7 +2,14 @@
 
 const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
 
-const _initSky   = luxon.DateTime.now().setZone('America/Los_Angeles');
+function getNow() {
+  const param = new URLSearchParams(window.location.search).get('mockTime');
+  return param
+    ? luxon.DateTime.fromISO(param).setZone('America/Los_Angeles')
+    : luxon.DateTime.now().setZone('America/Los_Angeles');
+}
+
+const _initSky   = getNow();
 let currentYear  = _initSky.year;
 let currentMonth = _initSky.month;
 
@@ -49,7 +56,7 @@ function renderCalendarGrid(year, month, gridEl) {
 
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
   const daysInMonth    = new Date(year, month, 0).getDate();
-  const todaySky       = luxon.DateTime.now().setZone('America/Los_Angeles').startOf('day');
+  const todaySky       = getNow().startOf('day');
 
   for (let i = 0; i < firstDayOfWeek; i++) {
     const cell = document.createElement('div');
@@ -103,7 +110,7 @@ function renderCalendar(year, month) {
 
 function buildDayLabel(skyDate) {
   const resetJST = skyDate.startOf('day').setZone('Asia/Tokyo');
-  return `${resetJST.month}/${resetJST.day}(${WEEKDAYS_JA[resetJST.weekday % 7]}) ${resetJST.toFormat('HH:mm')}-`;
+  return `${resetJST.month}/${resetJST.day}（${WEEKDAYS_JA[resetJST.weekday % 7]}） ${resetJST.toFormat('HH:mm')}-`;
 }
 
 function computeLineLeft(nowSky, occurrences) {
@@ -128,7 +135,7 @@ function computeLineLeft(nowSky, occurrences) {
 }
 
 function renderTodayCard() {
-  const nowSky       = luxon.DateTime.now().setZone('America/Los_Angeles');
+  const nowSky       = getNow();
   const todayInfo    = getShardInfo(nowSky);
   const tomorrowInfo = getShardInfo(nowSky.plus({ days: 1 }));
 

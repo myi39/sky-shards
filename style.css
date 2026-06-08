@@ -285,8 +285,8 @@ body {
 }
 .slot-col.slot-past   { background: #e3e3e8; }
 .slot-col.slot-future { background: #FEF5DA; }
-.slot-time-main { font-size: 13px; font-weight: 700; margin-bottom: 1px; }
-.slot-time-end  { font-size: 11px; }
+.slot-time-main { font-size: 13px; font-weight: 700; margin-bottom: 1px; position: relative; z-index: 2; }
+.slot-time-end  { font-size: 11px; position: relative; z-index: 2; }
 .slot-col.slot-past .slot-time-main { color: #aeaeb2; font-weight: 500; }
 .slot-col.slot-past .slot-time-end  { color: #c7c7cc; }
 .slot-col.slot-future .slot-time-main { color: var(--text-primary); }
