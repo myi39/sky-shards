@@ -5,6 +5,16 @@ on:
     - cron: '0 7 * * *'  # UTC 07:00 = LA 00:00 (PDT: 夏時間)
     - cron: '0 8 * * *'  # UTC 08:00 = LA 00:00 (PST: 冬時間)
   workflow_dispatch:       # 手動実行（テスト用）
+    inputs:
+      target:
+        description: '送信先'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - test
+          - prod
+          - both
 
 permissions:
   contents: write
@@ -53,49 +63,58 @@ jobs:
 
       - name: Send or update Discord message
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_TEST }}"
-            ID_FILE=".github/discord-message-id-test"
-          else
-            WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_PROD }}"
-            ID_FILE=".github/discord-message-id-prod"
-          fi
+          send_to_discord() {
+            local WEBHOOK_URL="$1"
+            local ID_FILE="$2"
 
-          PAYLOAD=$(jq -n \
-            --arg url "${{ vars.DASHBOARD_URL }}" \
-            '{
-              content: "skyシャード予報",
-              embeds: [
-                { image: { url: "attachment://shard_info_discord.png" } },
-                { description: ("[Webダッシュボードを開く](" + $url + ")") }
-              ],
-              attachments: []
-            }')
+            PAYLOAD=$(jq -n \
+              --arg url "${{ vars.DASHBOARD_URL }}" \
+              '{
+                content: "skyシャード予報",
+                embeds: [
+                  { image: { url: "attachment://shard_info_discord.png" } },
+                  { description: ("[Webダッシュボードを開く](" + $url + ")") }
+                ],
+                attachments: []
+              }')
 
-          # 既存メッセージIDがあれば編集を試みる
-          if [ -f "$ID_FILE" ]; then
-            MESSAGE_ID=$(cat "$ID_FILE")
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+            if [ -f "$ID_FILE" ]; then
+              MESSAGE_ID=$(cat "$ID_FILE")
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+                -F "payload_json=$PAYLOAD" \
+                -F "files[0]=@images/shard_info_discord.png" \
+                "$WEBHOOK_URL/messages/$MESSAGE_ID")
+
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "Message updated (ID: $MESSAGE_ID)"
+                return 0
+              fi
+              echo "PATCH failed (HTTP $HTTP_STATUS), will post new message"
+            fi
+
+            RESPONSE=$(curl -s -X POST \
               -F "payload_json=$PAYLOAD" \
               -F "files[0]=@images/shard_info_discord.png" \
-              "$WEBHOOK_URL/messages/$MESSAGE_ID")
+              "$WEBHOOK_URL")
 
-            if [ "$HTTP_STATUS" = "200" ]; then
-              echo "Message updated (ID: $MESSAGE_ID)"
-              exit 0
-            fi
-            echo "PATCH failed (HTTP $HTTP_STATUS), will post new message"
+            NEW_ID=$(echo "$RESPONSE" | jq -r '.id')
+            echo "$NEW_ID" > "$ID_FILE"
+            echo "New message posted (ID: $NEW_ID)"
+          }
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ inputs.target }}"
+          else
+            TARGET="prod"
           fi
 
-          # 新規投稿してIDを保存
-          RESPONSE=$(curl -s -X POST \
-            -F "payload_json=$PAYLOAD" \
-            -F "files[0]=@images/shard_info_discord.png" \
-            "$WEBHOOK_URL")
+          if [ "$TARGET" = "test" ] || [ "$TARGET" = "both" ]; then
+            send_to_discord "${{ secrets.DISCORD_WEBHOOK_URL_TEST }}" ".github/discord-message-id-test"
+          fi
 
-          NEW_ID=$(echo "$RESPONSE" | jq -r '.id')
-          echo "$NEW_ID" > "$ID_FILE"
-          echo "New message posted (ID: $NEW_ID)"
+          if [ "$TARGET" = "prod" ] || [ "$TARGET" = "both" ]; then
+            send_to_discord "${{ secrets.DISCORD_WEBHOOK_URL_PROD }}" ".github/discord-message-id-prod"
+          fi
 
       - name: Commit message ID back to repo
         run: |
