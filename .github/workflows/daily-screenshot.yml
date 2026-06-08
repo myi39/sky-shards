@@ -6,6 +6,9 @@ on:
     - cron: '0 8 * * *'  # UTC 08:00 = LA 00:00 (PST: 冬時間)
   workflow_dispatch:       # 手動実行（テスト用）
 
+permissions:
+  contents: write
+
 jobs:
   check-time:
     runs-on: ubuntu-latest
@@ -48,14 +51,61 @@ jobs:
       - name: Take screenshot
         run: node scripts/screenshot.js --prod
 
-      - name: Send to Discord
+      - name: Send or update Discord message
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_TEST }}"
+            ID_FILE=".github/discord-message-id-test"
           else
             WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_PROD }}"
+            ID_FILE=".github/discord-message-id-prod"
           fi
-          curl -X POST \
-            -F "payload_json={\"content\":\"🌠 今日のSky Shards スケジュール\"}" \
-            -F "file=@images/shard_info_discord.png" \
-            "$WEBHOOK_URL"
+
+          PAYLOAD=$(jq -n \
+            --arg url "${{ vars.DASHBOARD_URL }}" \
+            '{
+              content: "skyシャード予報",
+              embeds: [
+                { image: { url: "attachment://shard_info_discord.png" } },
+                { description: ("[Webダッシュボードを開く](" + $url + ")") }
+              ],
+              attachments: []
+            }')
+
+          # 既存メッセージIDがあれば編集を試みる
+          if [ -f "$ID_FILE" ]; then
+            MESSAGE_ID=$(cat "$ID_FILE")
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+              -F "payload_json=$PAYLOAD" \
+              -F "files[0]=@images/shard_info_discord.png" \
+              "$WEBHOOK_URL/messages/$MESSAGE_ID")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Message updated (ID: $MESSAGE_ID)"
+              exit 0
+            fi
+            echo "PATCH failed (HTTP $HTTP_STATUS), will post new message"
+          fi
+
+          # 新規投稿してIDを保存
+          RESPONSE=$(curl -s -X POST \
+            -F "payload_json=$PAYLOAD" \
+            -F "files[0]=@images/shard_info_discord.png" \
+            "$WEBHOOK_URL")
+
+          NEW_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "$NEW_ID" > "$ID_FILE"
+          echo "New message posted (ID: $NEW_ID)"
+
+      - name: Commit message ID back to repo
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          [ -f ".github/discord-message-id-test" ] && git add ".github/discord-message-id-test" || true
+          [ -f ".github/discord-message-id-prod" ] && git add ".github/discord-message-id-prod" || true
+          if git diff --staged --quiet; then
+            echo "No new message ID to commit"
+          else
+            git commit -m "ci: update Discord message ID [skip ci]"
+            git push
+          fi
