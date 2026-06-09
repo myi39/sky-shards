@@ -37,14 +37,17 @@ jobs:
 
       - name: Send or update Discord message
         run: |
+          JA_TIME=$(TZ='Asia/Tokyo' date '+%-m/%-d %H:%M')
+
           send_to_discord() {
             local WEBHOOK_URL="$1"
             local ID_FILE="$2"
 
             PAYLOAD=$(jq -n \
               --arg url "${{ vars.DASHBOARD_URL }}" \
+              --arg ja_time "${JA_TIME} 更新" \
               '{
-                content: "skyシャード予報",
+                content: $ja_time,
                 embeds: [
                   { image: { url: "attachment://shard_info_discord.png" } },
                   { description: ("[Webダッシュボードを開く](" + $url + ")") }
