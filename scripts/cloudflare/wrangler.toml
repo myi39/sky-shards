@@ -1,6 +1,7 @@
 name = "sky-shards-cron"
 main = "cron-trigger.js"
 compatibility_date = "2025-01-01"
+account_id = "4c60992f692abcb951a142e8b3634c59"
 
 [triggers]
 crons = ["0 7 * * *", "0 8 * * *"]
