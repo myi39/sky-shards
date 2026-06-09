@@ -23,7 +23,7 @@ body {
 }
 
 /* ── Main ── */
-.main { padding: 16px 16px 100px; }
+.main { padding: 16px 16px 24px; }
 .page-label {
   font-size: 12px; font-weight: 600;
   color: var(--text-tertiary); letter-spacing: 0.3px;
@@ -315,4 +315,17 @@ body {
   background: #ebebf0; text-align: center;
   font-size: 12px; color: var(--text-tertiary);
   margin-bottom: 10px;
+}
+
+/* フッター */
+.site-footer {
+  text-align: center;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--separator);
+  margin-top: 8px;
+}
+.site-footer p {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
 }
